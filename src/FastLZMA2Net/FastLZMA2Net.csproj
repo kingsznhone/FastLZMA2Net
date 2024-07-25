@@ -8,14 +8,15 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	<Platforms>x64;x86;AnyCPU</Platforms>
-	<VersionPrefix>0.1.0</VersionPrefix>
-	<Version>$(VersionPrefix)</Version>
+	<VersionPrefix>0.1.5</VersionPrefix>
+	  <VersionSuffix>alpha</VersionSuffix>
+	<Version>$(VersionPrefix)-$(VersionSuffix)</Version>
 	<PackageId>FastLZMA2Net</PackageId>
   </PropertyGroup>
 	
 	<ItemGroup Condition="'$(Platform)' == 'AnyCPU'">
 		<None Include="build\x64\fast-lzma2.dll">
-			<Link>%(FileName)%(Extension)</Link>
+			<Link>x64\%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Include="build\x86\fast-lzma2.dll">
@@ -35,16 +36,6 @@
 		</None>
 	</ItemGroup>
 	
-	<ItemGroup>
-		<None Include="build\x64\fast-lzma2.dll">
-			<Link>x64\%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="build\x86\fast-lzma2.dll">
-			<Link>x86\%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
 	<ItemGroup>
 		<None Include="build\**\*" Pack="true" PackagePath="build\" />
 		<None Include="build\LICENSE-fast-lzma2" Pack="true" PackagePath="lib\" />

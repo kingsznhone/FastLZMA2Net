@@ -7,12 +7,14 @@ namespace Demo
     {
         private static void Main(string[] args)
         {
+            int size = IntPtr.Size;
+            ExternMethods.SetWinDllDirectory();
             Compressor compressor = new Compressor();
-            var parameters = FL2.GetPresetLevelParameters(10, 0);
+            CompressionParameters parameters = FL2.GetPresetLevelParameters(10, 0);
             parameters = FL2.GetPresetLevelParameters(10, 1);
             compressor.CompressLevel = 10;
             compressor.HighCompressLevel = 1;
-            compressor.DictionarySize = 1 << 30;
+            compressor.DictionarySize = FL2.DictSizeMax;
             byte[] src = File.ReadAllBytes("D:\\game.fnt");
             //PrintHex(src);
 

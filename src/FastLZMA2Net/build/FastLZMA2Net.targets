@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<ItemGroup Condition="'$(Platform)' == 'AnyCPU'">
 		<None Include="$(MSBuildThisFileDirectory)x64\fast-lzma2.dll">
-			<Link>%(FileName)%(Extension)</Link>
+			<Link>x64\%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Include="$(MSBuildThisFileDirectory)x86\fast-lzma2.dll">

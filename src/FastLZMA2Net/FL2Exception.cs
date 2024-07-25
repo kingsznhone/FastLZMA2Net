@@ -30,6 +30,11 @@
             ErrorCode = GetErrorCode(code);
         }
 
+        public FL2Exception(FL2ErrorCode code) : base(GetErrorString(code))
+        {
+            ErrorCode = code;
+        }
+
         public static FL2ErrorCode GetErrorCode(nuint code)
         {
             if (!IsError(code))
