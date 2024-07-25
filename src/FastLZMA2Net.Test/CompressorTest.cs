@@ -12,9 +12,29 @@ namespace Test
     public class ContextTest
     {
         [TestMethod]
+        public void Union()
+        {
+            Compressor compressorMT = new Compressor();
+            Decompressor decompressorMT = new Decompressor(0);
+            for (int i = 0; i < 5; i++)
+            {
+                byte[] src = new byte[4096 * 1024];
+                new Random().NextBytes(src);
+
+                byte[] compressed = compressorMT.Compress(src, 10);
+                
+                byte prop = compressorMT.DictSizeProperty;
+                byte[] decompressed = decompressorMT.Decompress(compressed);
+                Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
+            }
+        }
+
+
+        [TestMethod]
         public void CompressorST()
         {
             Compressor compressorST = new Compressor();
+
             for (int i = 0; i < 5; i++)
             {
                 byte[] src = new byte[4096 * 1024];
@@ -47,16 +67,18 @@ namespace Test
         public void SetDictSize()
         {
             Compressor compressorST = new Compressor();
-            compressorST.DictionarySize = 1 << 20;
-            compressorST.DictionarySize = 1 << 30;
+            compressorST.DictionarySize = FL2.DictSizeMin;
+            compressorST.DictionarySize = FL2.DictSizeMax;
             var exception = Assert.ThrowsException<FL2Exception>(() =>
             {
-                compressorST.DictionarySize = 1 << 19;
+                compressorST.DictionarySize = FL2.DictSizeMin >> 1 ;
             });
+            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.parameter_outOfBound);
             exception = Assert.ThrowsException<FL2Exception>(() =>
             {
-                compressorST.DictionarySize = 1 << 31;
+                compressorST.DictionarySize = FL2.DictSizeMax << 1;
             });
+            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.parameter_outOfBound);
         }
 
         [TestMethod]
@@ -73,14 +95,17 @@ namespace Test
             {
                 compressorST.CompressLevel = -1;
             });
+            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.parameter_outOfBound);
             exception = Assert.ThrowsException<FL2Exception>(() =>
             {
                 compressorST.CompressLevel = 0;
             });
+            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.parameter_outOfBound);
             exception = Assert.ThrowsException<FL2Exception>(() =>
             {
                 compressorST.CompressLevel = 11;
             });
+            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.parameter_outOfBound);
         }
 
         [TestMethod]

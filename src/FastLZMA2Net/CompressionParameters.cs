@@ -11,7 +11,7 @@ namespace FastLZMA2Net
 
     public struct CompressionParameters
     {
-        public nuint DictionarySize;  //Only for x64
+        public nuint DictionarySize; 
 
         public uint OverlapFraction;
 

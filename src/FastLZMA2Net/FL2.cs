@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Drawing;
+using System.IO.MemoryMappedFiles;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace FastLZMA2Net
@@ -100,6 +102,31 @@ namespace FastLZMA2Net
             return size;
         }
 
+        public static unsafe nuint FindDecompressedSize(string filePath)
+        {
+            FileInfo localFile = new FileInfo(filePath);
+            MemoryMappedFile mmFile = MemoryMappedFile.CreateFromFile(localFile.FullName, FileMode.Open);
+            nuint size = nuint.Zero;
+
+            using (var accessor = mmFile.CreateViewAccessor())
+            {
+                byte* start = null;
+                accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref start);
+                try
+                {
+                    size = ExternMethods.FL2_findDecompressedSize(start, (nuint)localFile.Length);
+                    if (size == nuint.MaxValue)
+                    {
+                        throw new FL2Exception(size);
+                    }
+                    return size;
+                }
+                finally
+                {
+                    accessor.SafeMemoryMappedViewHandle.ReleasePointer();
+                }
+            }
+        }
         public static byte[] Compress(byte[] data, int Level)
         {
             byte[] compressed = new byte[ExternMethods.FL2_compressBound((nuint)data.Length)];

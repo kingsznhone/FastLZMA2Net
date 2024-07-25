@@ -415,7 +415,7 @@ Introduction
 
     /*===== Streaming decompression functions =====*/
 
-    /*! FL2_initDStream() :
+    /*! FL2_initDStream():
      *  Call this function before decompressing a stream. FL2_initDStream_withProp()
      *  must be used for streams which do not include a property byte at position zero.
      *  The caller is responsible for storing and passing the property byte.
@@ -424,7 +424,7 @@ Introduction
     FL2LIB_API size_t FL2LIB_CALL FL2_initDStream(FL2_DStream* fds);
     FL2LIB_API size_t FL2LIB_CALL FL2_initDStream_withProp(FL2_DStream* fds, unsigned char prop);
 
-    /*! FL2_decompressStream() :
+    /*! FL2_decompressStream():
      *  Reads data from input and decompresses to output.
      *  Returns 1 if the stream is unfinished, 0 if the terminator was encountered (he'll be back)
      *  and all data was written to output, or an error code. Call this function repeatedly if

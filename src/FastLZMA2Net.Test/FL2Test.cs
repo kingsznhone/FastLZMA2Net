@@ -5,7 +5,7 @@ using FastLZMA2Net;
 namespace Test
 {
     [TestClass]
-    public class FL2Test
+    public class SimpleTest
     {
 
         [TestMethod]
@@ -42,11 +42,12 @@ namespace Test
             {
                 parameters = FL2.GetPresetLevelParameters(-1, 0);
             });
+            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.parameter_outOfBound);
             exception = Assert.ThrowsException<FL2Exception>(() =>
             {
                 parameters = FL2.GetPresetLevelParameters(11, 0);
             });
-
+            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.parameter_outOfBound);
             Console.WriteLine($"Max Level{FL2.MaxCompressionLevel}");
             Console.WriteLine($"Max High Level{FL2.MaxHighCompressionLevel}");
         }

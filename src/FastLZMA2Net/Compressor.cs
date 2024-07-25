@@ -57,7 +57,7 @@ namespace FastLZMA2Net
 
         public byte[] Compress(byte[] data)
         {
-            return Compress(data, CompressLevel);
+            return Compress(data, 0);
         }
 
         public byte[] Compress(byte[] data, int Level)

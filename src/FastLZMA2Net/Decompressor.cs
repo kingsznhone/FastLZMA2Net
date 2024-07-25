@@ -23,10 +23,10 @@ namespace FastLZMA2Net
             _context = ExternMethods. FL2_createDCtxMt(nThread);
         }
 
-        //public void Dispose()
-        //{
-        //    
-        //}
+        public void Init(byte prop)
+        {
+            ExternMethods.FL2_initDCtx(_context, prop);
+        }
 
         public byte[] Decompress(byte[] data)
         {
