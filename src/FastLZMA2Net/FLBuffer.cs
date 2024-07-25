@@ -1,21 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Marshalling;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 
 namespace FastLZMA2Net
 {
-    
     public struct FL2InBuffer
     {
         public nint src;
         public nuint size;
         public nuint pos;
-
     }
 
     //[CustomMarshaller(typeof(FL2InBuffer), MarshalMode.ManagedToUnmanagedIn, typeof(FL2InBufferMarshaller))]
@@ -41,11 +32,10 @@ namespace FastLZMA2Net
 
     //    public static void Free(FL2InBufferUnmanaged unmanaged)
     //    {
-            
     //    }
     //}
 
-    public ref struct FL2OutBuffer
+    public struct FL2OutBuffer
     {
         public nint dst;
         public nuint size;
@@ -57,6 +47,7 @@ namespace FastLZMA2Net
     {
         [MarshalAs(UnmanagedType.LPArray)]
         public byte[] dst;
+
         public nuint size;
     }
 
@@ -65,7 +56,7 @@ namespace FastLZMA2Net
     {
         [MarshalAs(UnmanagedType.LPArray)]
         public byte[] src;
+
         public nuint size;
     }
-
 }

@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace FastLZMA2Net
+﻿namespace FastLZMA2Net
 {
     public enum FL2Strategy
     {
@@ -11,7 +9,7 @@ namespace FastLZMA2Net
 
     public struct CompressionParameters
     {
-        public nuint DictionarySize; 
+        public nuint DictionarySize;
 
         public uint OverlapFraction;
 

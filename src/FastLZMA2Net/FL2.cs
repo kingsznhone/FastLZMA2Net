@@ -1,13 +1,9 @@
-﻿using System.Drawing;
-using System.IO.MemoryMappedFiles;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+﻿using System.IO.MemoryMappedFiles;
 
 namespace FastLZMA2Net
 {
     public static partial class FL2
     {
-       
         #region Properties
 
         public static readonly Version Version = new Version(1, 0, 1);
@@ -53,7 +49,7 @@ namespace FastLZMA2Net
         /// <summary>
         /// maximum compression level available
         /// </summary>
-        public static int CompressionLevelMax =>ExternMethods.FL2_maxCLevel();
+        public static int CompressionLevelMax => ExternMethods.FL2_maxCLevel();
 
         /// <summary>
         /// maximum compression level available in high mode
@@ -85,6 +81,11 @@ namespace FastLZMA2Net
             return ExternMethods.FL2_compressBound((nuint)src.Length);
         }
 
+        public static nuint FindCompressBound(nuint streamSize)
+        {
+            return ExternMethods.FL2_compressBound(streamSize);
+        }
+
         /// <summary>
         /// Find Decompressed Size of a Compressed Data
         /// </summary>
@@ -107,9 +108,9 @@ namespace FastLZMA2Net
             FileInfo file = new FileInfo(filePath);
             if (!file.Exists)
             {
-               throw new FileNotFoundException("File not found", filePath);
+                throw new FileNotFoundException("File not found", filePath);
             }
-            using (DirectFileAccessor accessor = new DirectFileAccessor(filePath,FileMode.Open,null,file.Length,MemoryMappedFileAccess.ReadWrite))
+            using (DirectFileAccessor accessor = new DirectFileAccessor(filePath, FileMode.Open, null, file.Length, MemoryMappedFileAccess.ReadWrite))
             {
                 var size = ExternMethods.FL2_findDecompressedSize(accessor.mmPtr, (nuint)file.Length);
                 if (size == nuint.MaxValue)
@@ -119,6 +120,7 @@ namespace FastLZMA2Net
                 return size;
             }
         }
+
         public static byte[] Compress(byte[] data, int Level)
         {
             byte[] compressed = new byte[ExternMethods.FL2_compressBound((nuint)data.Length)];
@@ -132,7 +134,7 @@ namespace FastLZMA2Net
 
         public static byte[] CompressMT(byte[] data, int Level, uint nbThreads)
         {
-            byte[] compressed = new byte[   ExternMethods.FL2_compressBound((nuint)data.Length)];
+            byte[] compressed = new byte[ExternMethods.FL2_compressBound((nuint)data.Length)];
             nuint code = ExternMethods.FL2_compressMt(compressed, (nuint)compressed.Length, data, (nuint)data.Length, Level, nbThreads);
             if (FL2Exception.IsError(code))
             {
@@ -171,7 +173,7 @@ namespace FastLZMA2Net
         public static nuint EstimateCompressMemoryUsage(CompressionParameters parameters, uint nbThreads)
             => ExternMethods.FL2_estimateCCtxSize_byParams(ref parameters, nbThreads);
 
-        public static nuint EstimateCompressMemoryUsage(IntPtr context)
+        public static nuint EstimateCompressMemoryUsage(nint context)
             => ExternMethods.FL2_estimateCCtxSize_usingCCtx(context);
 
         public static nuint EstimateDecompressMemoryUsage(uint nbThreads)

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FastLZMA2Net
+﻿namespace FastLZMA2Net
 {
-    public class DecompressionStream : Stream,IDisposable
+    public class DecompressionStream : Stream, IDisposable
     {
         public override bool CanRead => throw new NotImplementedException();
 
@@ -20,8 +14,8 @@ namespace FastLZMA2Net
 
         public DecompressionStream()
         {
-            
         }
+
         public override void Flush()
         {
             throw new NotImplementedException();

@@ -1,13 +1,9 @@
-﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
-namespace FastLZMA2Net
+﻿namespace FastLZMA2Net
 {
     public partial class Decompressor : IDisposable
     {
-        const string LibraryName = "fast-lzma2";
+        private const string LibraryName = "fast-lzma2";
 
-        
         private nint _context;
         private bool disposedValue;
 
@@ -15,12 +11,12 @@ namespace FastLZMA2Net
 
         public Decompressor()
         {
-            _context = ExternMethods. FL2_createDCtx();
+            _context = ExternMethods.FL2_createDCtx();
         }
 
         public Decompressor(uint nThread)
         {
-            _context = ExternMethods. FL2_createDCtxMt(nThread);
+            _context = ExternMethods.FL2_createDCtxMt(nThread);
         }
 
         public void Init(byte prop)

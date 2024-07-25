@@ -1,14 +1,10 @@
-﻿using System.Drawing;
-using System.IO.MemoryMappedFiles;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+﻿using System.IO.MemoryMappedFiles;
 
 namespace FastLZMA2Net
 {
     //FL2CompressContext
     public partial class Compressor : IDisposable
     {
-
         private readonly nint _context;
         private bool disposed = false;
         private bool disposedValue;
@@ -39,12 +35,12 @@ namespace FastLZMA2Net
             get => (int)GetParameter(CompressParameterEnum.FL2_p_searchDepth);
             set => SetParameter(CompressParameterEnum.FL2_p_searchDepth, (nuint)value);
         }
+
         public int FastLength
         {
             get => (int)GetParameter(CompressParameterEnum.FL2_p_fastLength);
             set => SetParameter(CompressParameterEnum.FL2_p_fastLength, (nuint)value);
         }
-
 
         public Compressor()
         {
@@ -71,6 +67,7 @@ namespace FastLZMA2Net
             }
             return buffer[..(int)code];
         }
+
         public unsafe nuint Compress(string srcPath, string dstPath)
         {
             nuint bound;
@@ -99,6 +96,7 @@ namespace FastLZMA2Net
             }
             return bound;
         }
+
         public nuint SetParameter(CompressParameterEnum param, nuint value)
         {
             nuint code = ExternMethods.FL2_CCtx_setParameter(_context, param, value);
@@ -123,7 +121,7 @@ namespace FastLZMA2Net
         {
             if (!disposedValue)
             {
-                if (disposing){ }
+                if (disposing) { }
                 ExternMethods.FL2_freeCCtx(_context);
                 disposedValue = true;
             }

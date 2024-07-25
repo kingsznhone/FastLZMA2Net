@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Marshalling;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FastLZMA2Net
 {
@@ -47,9 +41,11 @@ namespace FastLZMA2Net
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static partial bool SetDllDirectoryW(string path);
-        const string LibraryName = "fast-lzma2";
+
+        private const string LibraryName = "fast-lzma2";
 
         #region Simple Function
+
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         internal static partial nuint FL2_compress(byte[] dst, nuint dstCapacity, byte[] src, nuint srcSize, int compressionLevel);
@@ -65,9 +61,11 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         internal static partial nuint FL2_decompressMt(byte[] dst, nuint dstCapacity, byte[] src, nuint compressedSize, uint nbThreads);
-        #endregion
+
+        #endregion Simple Function
 
         #region Helper Functions
+
         /// <summary>
         /// A property byte is assumed to exist at position 0 in `src`. If the stream was created without one,  subtract 1 byte from `src` when passing it to the function.
         /// </summary>
@@ -84,7 +82,6 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial nuint FL2_findDecompressedSize(byte* src, nuint srcSize);
-
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -171,7 +168,6 @@ namespace FastLZMA2Net
                                               byte* src, nuint srcSize,
                                               int compressionLevel);
 
-
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         internal static partial byte FL2_getCCtxDictProp(nint context);
@@ -184,7 +180,7 @@ namespace FastLZMA2Net
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         internal static partial nuint FL2_CCtx_getParameter(nint context, CompressParameterEnum param);
 
-        #endregion
+        #endregion Compress Context
 
         #region Decompress Context
 
@@ -220,9 +216,10 @@ namespace FastLZMA2Net
                                                 byte* dst, nuint dstCapacity,
                                                 byte* src, nuint srcSize);
 
-        #endregion
+        #endregion Decompress Context
 
         #region Decompress Stream
+
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial nint FL2_createDStream();
@@ -265,9 +262,8 @@ namespace FastLZMA2Net
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-        //[DllImport(LibraryName,CallingConvention = CallingConvention.Cdecl,CharSet = CharSet.Unicode)]
-        public static partial nuint FL2_decompressStream(nint fds,ref FL2OutBuffer output,ref  FL2InBuffer input);
+        public static partial nuint FL2_decompressStream(nint fds, ref FL2OutBuffer output, ref FL2InBuffer input);
 
-        #endregion
+        #endregion Decompress Stream
     }
 }
