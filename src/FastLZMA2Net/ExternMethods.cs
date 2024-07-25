@@ -166,6 +166,14 @@ namespace FastLZMA2Net
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        internal static partial nuint FL2_compressCCtx(nint context,
+                                              byte* dst, nuint dstCapacity,
+                                              byte* src, nuint srcSize,
+                                              int compressionLevel);
+
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         internal static partial byte FL2_getCCtxDictProp(nint context);
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
@@ -205,6 +213,12 @@ namespace FastLZMA2Net
         internal static partial nuint FL2_decompressDCtx(nint context,
                                                         byte[] dst, nuint dstCapacity,
                                                         byte[] src, nuint srcSize);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        internal static partial nuint FL2_decompressDCtx(nint context,
+                                                byte* dst, nuint dstCapacity,
+                                                byte* src, nuint srcSize);
 
         #endregion
 

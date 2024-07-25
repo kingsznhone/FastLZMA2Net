@@ -63,6 +63,18 @@ namespace Test
                 Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
             }
         }
+
+        [TestMethod]
+        public void DirectCompress()
+        {
+            Compressor compressor = new Compressor();
+            nuint length =  compressor.Compress("Resources/dummy.raw", "Resources/dummy.test");
+            byte[] compressed = File.ReadAllBytes("Resources/dummy.test");
+            byte[] recovered = FL2.Decompress(compressed);
+            byte[] origin = File.ReadAllBytes("Resources/dummy.raw");
+            File.Delete("Resources/dummy.test");
+            Assert.IsTrue(recovered.SequenceEqual(origin));
+        }
         [TestMethod]
         public void SetDictSize()
         {

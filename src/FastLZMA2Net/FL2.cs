@@ -53,12 +53,12 @@ namespace FastLZMA2Net
         /// <summary>
         /// maximum compression level available
         /// </summary>
-        public static int MaxCompressionLevel =>ExternMethods.FL2_maxCLevel();
+        public static int CompressionLevelMax =>ExternMethods.FL2_maxCLevel();
 
         /// <summary>
         /// maximum compression level available in high mode
         /// </summary>
-        public static int MaxHighCompressionLevel => ExternMethods.FL2_maxHighCLevel();
+        public static int HighCompressionLevelMax => ExternMethods.FL2_maxHighCLevel();
 
         #endregion Properties
 
@@ -104,27 +104,19 @@ namespace FastLZMA2Net
 
         public static unsafe nuint FindDecompressedSize(string filePath)
         {
-            FileInfo localFile = new FileInfo(filePath);
-            MemoryMappedFile mmFile = MemoryMappedFile.CreateFromFile(localFile.FullName, FileMode.Open);
-            nuint size = nuint.Zero;
-
-            using (var accessor = mmFile.CreateViewAccessor())
+            FileInfo file = new FileInfo(filePath);
+            if (!file.Exists)
             {
-                byte* start = null;
-                accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref start);
-                try
+               throw new FileNotFoundException("File not found", filePath);
+            }
+            using (DirectFileAccessor accessor = new DirectFileAccessor(filePath,FileMode.Open,null,file.Length,MemoryMappedFileAccess.ReadWrite))
+            {
+                var size = ExternMethods.FL2_findDecompressedSize(accessor.mmPtr, (nuint)file.Length);
+                if (size == nuint.MaxValue)
                 {
-                    size = ExternMethods.FL2_findDecompressedSize(start, (nuint)localFile.Length);
-                    if (size == nuint.MaxValue)
-                    {
-                        throw new FL2Exception(size);
-                    }
-                    return size;
+                    throw new FL2Exception(size);
                 }
-                finally
-                {
-                    accessor.SafeMemoryMappedViewHandle.ReleasePointer();
-                }
+                return size;
             }
         }
         public static byte[] Compress(byte[] data, int Level)

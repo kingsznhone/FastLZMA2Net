@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using FastLZMA2Net;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -19,21 +20,38 @@ namespace Demo
             }
 
             //new Random().NextBytes(src);
-            Compressor compressor = new();
+            Compressor compressor = new(0);
 
             var dictsize = compressor.DictionarySize;
+
+            FileInfo srcFile = new FileInfo(@"d:\半条命1三合一.tar");
+            FileInfo dstFile = new FileInfo(@"d:\半条命1三合一.tar.fl2");
+            compressor.Compress(@"d:\半条命1三合一.tar", @"d:\半条命1三合一.tar.fl2");
+            compressor.CompressLevel = FL2.CompressionLevelMax;
             //byte[] compressed = compressor.Compress(src);
 
             //using (var fs = File.OpenWrite(@"d:\temp.lz2"))
             //{
             //    fs.Write(compressed, 0, compressed.Length);
             //}
-            byte[] compressed = File.ReadAllBytes(@"d:\temp.lz2");
+            byte[] compressed = File.ReadAllBytes(dstFile.FullName);
+
+            byte[] recovery = FL2.Decompress(compressed);
+            byte[] origin = File.ReadAllBytes(srcFile.FullName);
+
+            byte[] hash1 = SHA256.HashData(recovery);
+            byte[] hash2 = SHA256.HashData(origin);
+
+            var cmp = hash1.SequenceEqual(hash2);
             nint streamCtx = ExternMethods.FL2_createDStream();
+
+            using (FileStream recoveryFile = File.OpenWrite("D:\\recovery.tar"))
+            {
+                recoveryFile.Write(recovery);
+            }
             nuint code = ExternMethods.FL2_initDStream(streamCtx);
 
-            MemoryStream ms = new MemoryStream();
-
+            
             GCHandle srcHandle = GCHandle.Alloc(compressed, GCHandleType.Pinned);
             FL2InBuffer inBuffer = new FL2InBuffer()
             {
@@ -49,11 +67,9 @@ namespace Demo
                 size =(nuint) dstArray.Length,
                 pos = 0
             };
-            FileInfo localFile = new FileInfo(@"d:\temp.lz2");
-            
-            // 获取内存映射视图
-            var unzipLength =FL2.FindDecompressedSize(localFile.FullName);
 
+            //var unzipLength =FL2.FindDecompressedSize(srcFile.FullName);
+            var ms = new MemoryStream();
             code = ExternMethods.FL2_decompressStream(streamCtx,ref outBuffer,ref inBuffer);
             ms.Write(dstArray.AsSpan());
 

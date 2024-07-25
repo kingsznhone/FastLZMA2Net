@@ -30,6 +30,16 @@ namespace Test
             Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
         }
         [TestMethod]
+        public void FindDecompressedSize()
+        {
+            byte[] data = File.ReadAllBytes("Resources/dummy.fl2");
+            nuint code = FL2.FindDecompressedSize(data);
+            Assert.AreEqual((long)code, 581048);
+            code = FL2.FindDecompressedSize("Resources/dummy.fl2");
+            Assert.AreEqual((long)code, 581048);
+        }
+
+        [TestMethod]
         public void GetPresetParams()
         {
             CompressionParameters parameters;
@@ -48,8 +58,8 @@ namespace Test
                 parameters = FL2.GetPresetLevelParameters(11, 0);
             });
             Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.parameter_outOfBound);
-            Console.WriteLine($"Max Level{FL2.MaxCompressionLevel}");
-            Console.WriteLine($"Max High Level{FL2.MaxHighCompressionLevel}");
+            Console.WriteLine($"Max Level{FL2.CompressionLevelMax}");
+            Console.WriteLine($"Max High Level{FL2.HighCompressionLevelMax}");
         }
     }
 }

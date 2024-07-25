@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Drawing;
+using System.IO.MemoryMappedFiles;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace FastLZMA2Net
@@ -54,7 +56,6 @@ namespace FastLZMA2Net
             _context = ExternMethods.FL2_createCCtxMt(nThread);
         }
 
-
         public byte[] Compress(byte[] data)
         {
             return Compress(data, 0);
@@ -70,14 +71,42 @@ namespace FastLZMA2Net
             }
             return buffer[..(int)code];
         }
-
-        public void SetParameter(CompressParameterEnum param, nuint value)
+        public unsafe nuint Compress(string srcPath, string dstPath)
         {
-            var code = ExternMethods.FL2_CCtx_setParameter(_context, param, value);
+            nuint bound;
+            FileInfo sourceFile = new FileInfo(srcPath);
+            FileInfo destFile = new FileInfo(dstPath);
+            using (DirectFileAccessor accessorSrc = new DirectFileAccessor(sourceFile.FullName, FileMode.Open, null, sourceFile.Length, MemoryMappedFileAccess.ReadWrite))
+            {
+                bound = ExternMethods.FL2_compressBound((nuint)sourceFile.Length);
+                if (FL2Exception.IsError(bound))
+                {
+                    throw new FL2Exception(bound);
+                }
+                using (DirectFileAccessor accessorDst = new DirectFileAccessor(destFile.FullName, FileMode.OpenOrCreate, null, sourceFile.Length, MemoryMappedFileAccess.ReadWrite))
+                {
+                    bound = ExternMethods.FL2_compressCCtx(_context, accessorDst.mmPtr, bound, accessorSrc.mmPtr, (nuint)sourceFile.Length, CompressLevel);
+                    if (FL2Exception.IsError(bound))
+                    {
+                        throw new FL2Exception(bound);
+                    }
+                }
+            }
+
+            using (var tmp = File.OpenWrite(destFile.FullName))
+            {
+                tmp.SetLength((long)bound);
+            }
+            return bound;
+        }
+        public nuint SetParameter(CompressParameterEnum param, nuint value)
+        {
+            nuint code = ExternMethods.FL2_CCtx_setParameter(_context, param, value);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
             }
+            return code;
         }
 
         public nuint GetParameter(CompressParameterEnum param)
