@@ -67,7 +67,7 @@ namespace FastLZMA2Net
 
         public ulong Progress => NativeMethods.FL2_getDStreamProgress(_context);
 
-        public override unsafe int Read(byte[] buffer, int offset, int count)
+        public override int Read(byte[] buffer, int offset, int count)
         {
             return Read(buffer.AsSpan(offset, count));
         }
@@ -118,7 +118,7 @@ namespace FastLZMA2Net
                         inBuffer.size = (nuint)bytesRead;
                         inBuffer.pos = 0;
                     }
-                } while (code == 1 || !cancellationToken.IsCancellationRequested);
+                } while (code == 1 && !cancellationToken.IsCancellationRequested);
                 return (int)outBuffer.pos;
             }
         }

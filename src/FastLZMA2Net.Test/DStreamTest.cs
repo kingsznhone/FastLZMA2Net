@@ -45,7 +45,7 @@ namespace Test
             }
         }
         [TestMethod]
-        public async void TestBlockedAsync()
+        public async Task TestBlockedAsync()
         {
             //Use Dummy File
             byte[] origin = File.ReadAllBytes(@"Resources/dummy.raw");
