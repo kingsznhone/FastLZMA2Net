@@ -13,11 +13,15 @@ namespace Test
         [TestMethod]
         public void TestSimpleDStream()
         {
-            byte[] origin = File.ReadAllBytes(@"D:\半条命1三合一.tar");
+            //Use Dummy File
+            byte[] origin = File.ReadAllBytes(@"Resources/dummy.raw");
             byte[] compressed = FL2.CompressMT(origin, 1,0);
+            //// Use Random byte[]
             //byte[] origin = new byte[4096 * 1024];
             //new Random().NextBytes(origin);
             //byte[] compressed = FL2.Compress(origin, 10);
+
+            //Test Block buffer
             byte[] buffer = new byte[81920];
             using (MemoryStream recoveryStream = new MemoryStream())
             {
@@ -35,23 +39,32 @@ namespace Test
                 byte[] dsResult = recoveryStream.ToArray();
                 Assert.IsTrue(origin.SequenceEqual(dsResult));
             }
+        }
+
+        [TestMethod]
+        public void TestStreamingDStream()
+        {
+            //Use Dummy file
+            byte[] origin = File.ReadAllBytes(@"Resources/dummy.raw");
+            byte[] compressed = FL2.CompressMT(origin, 1, 0);
+
+            //// Use Random byte[]
+            //byte[] origin = new byte[4096 * 1024];
+            //new Random().NextBytes(origin);
+            //byte[] compressed = FL2.Compress(origin, 10);
+
             //test direct file access
-            using (MemoryStream recoveryStream = new MemoryStream())
+            using (FileStream recoveryStream = new FileStream(@"Resources/dummy.recovery",FileMode.OpenOrCreate,FileAccess.ReadWrite))
             {
-                using (FileStream fs = new FileStream(@"D:\半条命1三合一.lz2",FileMode.Open,FileAccess.Read))
+                using (FileStream fs = new FileStream(@"Resources/dummy.fl2", FileMode.Open, FileAccess.Read))
                 {
                     using (DecompressionStream ds = new DecompressionStream(fs))
                     {
-                        int reads = 0;
-                        while ((reads = ds.Read(buffer, 0, buffer.Length)) != 0)
-                        {
-                            recoveryStream.Write(buffer, 0, reads);
-                        }
+                        ds.CopyTo(recoveryStream);
                     }
                 }
-                byte[] dsResult = recoveryStream.ToArray();
-                Assert.IsTrue(origin.SequenceEqual(dsResult));
             }
+            Assert.IsTrue(origin.SequenceEqual(File.ReadAllBytes(@"Resources/dummy.recovery")));
         }
     }
 }
