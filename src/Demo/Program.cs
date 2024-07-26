@@ -22,79 +22,53 @@ namespace Demo
             //new Random().NextBytes(src);
             Compressor compressor = new(0);
 
-            var dictsize = compressor.DictionarySize;
-
-            FileInfo srcFile = new FileInfo(@"d:\半条命1三合一.tar");
-            FileInfo dstFile = new FileInfo(@"d:\半条命1三合一.tar.fl2");
-            compressor.Compress(@"d:\半条命1三合一.tar", @"d:\半条命1三合一.tar.fl2");
+            FileInfo srcFile = new FileInfo(@"d:\NatTypeTester.exe");
+            FileInfo dstFile = new FileInfo(@"d:\NatTypeTester.fl2");
+            //compressor.Compress(@"d:\半条命1三合一.tar", @"d:\半条命1三合一.tar.fl2");
             compressor.CompressLevel = FL2.CompressionLevelMax;
-            //byte[] compressed = compressor.Compress(src);
+            byte[] compressed = compressor.Compress(File.ReadAllBytes(@"D:\工作流测试请求.bin"));
 
-            //using (var fs = File.OpenWrite(@"d:\temp.lz2"))
+            using (var fs = File.OpenWrite(@"d:\NatTypeTester.fl2"))
+            {
+                fs.Write(compressed, 0, compressed.Length);
+            }
+            //byte[] compressed = File.ReadAllBytes(dstFile.FullName);
+
+            //byte[] recovery = FL2.DecompressMT(compressed,0);
+            byte[] origin = File.ReadAllBytes(@"D:\工作流测试请求.bin");
+
+            //byte[] hash1 = SHA256.HashData(recovery);
+            //byte[] hash2 = SHA256.HashData(origin);
+
+            //var cmp = hash1.SequenceEqual(hash2);
+            //using (FileStream recoveryFile = File.OpenWrite("D:\\recovery.tar"))
             //{
-            //    fs.Write(compressed, 0, compressed.Length);
+            //    recoveryFile.Write(recovery);
             //}
-            byte[] compressed = File.ReadAllBytes(dstFile.FullName);
-
-            byte[] recovery = FL2.Decompress(compressed);
-            byte[] origin = File.ReadAllBytes(srcFile.FullName);
-
-            byte[] hash1 = SHA256.HashData(recovery);
-            byte[] hash2 = SHA256.HashData(origin);
-
-            var cmp = hash1.SequenceEqual(hash2);
             nint streamCtx = ExternMethods.FL2_createDStream();
 
-            using (FileStream recoveryFile = File.OpenWrite("D:\\recovery.tar"))
-            {
-                recoveryFile.Write(recovery);
-            }
+
             nuint code = ExternMethods.FL2_initDStream(streamCtx);
 
+            byte[] buffer = new byte[81920];
+            using (MemoryStream recoveryStream = new MemoryStream())
+            {
+                using (MemoryStream ms = new MemoryStream(compressed))
+                {
+                    using (DecompressionStream ds = new DecompressionStream(ms))
+                    {
+                        int reads = 0;
+                        while ((reads = ds.Read(buffer, 0, buffer.Length)) != 0)
+                        {
+                            PrintHex(buffer[0..reads]);
+                            recoveryStream.Write(buffer, 0, reads);
+                        }
+                    }
+                }
+                byte[] dsResult = recoveryStream.ToArray();
+                var same = origin.SequenceEqual(dsResult);
+            }
             
-            GCHandle srcHandle = GCHandle.Alloc(compressed, GCHandleType.Pinned);
-            FL2InBuffer inBuffer = new FL2InBuffer()
-            {
-                src = srcHandle.AddrOfPinnedObject(),
-                size =(nuint) compressed.Length,
-                pos = 0
-            };
-            byte[] dstArray = new byte[1048576];
-            GCHandle dstHandle = GCHandle.Alloc(dstArray, GCHandleType.Pinned);
-            FL2OutBuffer outBuffer = new FL2OutBuffer()
-            {
-                dst = dstHandle.AddrOfPinnedObject(),
-                size =(nuint) dstArray.Length,
-                pos = 0
-            };
-
-            //var unzipLength =FL2.FindDecompressedSize(srcFile.FullName);
-            var ms = new MemoryStream();
-            code = ExternMethods.FL2_decompressStream(streamCtx,ref outBuffer,ref inBuffer);
-            ms.Write(dstArray.AsSpan());
-
-            outBuffer.pos = 0;
-            code = ExternMethods.FL2_decompressStream(streamCtx, ref outBuffer, ref inBuffer);
-            ms.Write(dstArray.AsSpan());
-
-            var progress  = ExternMethods.FL2_getDStreamProgress(streamCtx);
-
-            outBuffer.pos = 0;
-            code = ExternMethods.FL2_decompressStream(streamCtx, ref outBuffer, ref inBuffer);
-            ms.Write(dstArray.AsSpan());
-
-            progress = ExternMethods.FL2_getDStreamProgress(streamCtx);
-
-            outBuffer.pos = 0;
-            code = ExternMethods.FL2_decompressStream(streamCtx, ref outBuffer, ref inBuffer);
-            ms.Write(dstArray.AsSpan());
-
-            outBuffer.pos = 0;
-            code = ExternMethods.FL2_decompressStream(streamCtx, ref outBuffer, ref inBuffer);
-            byte[] decompressed = ms.ToArray();
-
-            var debug = src.SequenceEqual(decompressed);
-
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
