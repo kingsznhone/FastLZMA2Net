@@ -12,7 +12,7 @@ namespace Demo
         private static void Main(string[] args)
         {
             int size = IntPtr.Size;
-            ExternMethods.SetWinDllDirectory();
+            NativeMethods.SetWinDllDirectory();
             byte[] src = new byte[128*1048576];
             for (int i = 0; i < src.Length; i++)
             {
@@ -20,22 +20,22 @@ namespace Demo
             }
 
             //new Random().NextBytes(src);
-            Compressor compressor = new(0);
+            Compressor compressor = new(0) { CompressLevel = 1 };
 
             FileInfo srcFile = new FileInfo(@"d:\NatTypeTester.exe");
             FileInfo dstFile = new FileInfo(@"d:\NatTypeTester.fl2");
-            //compressor.Compress(@"d:\半条命1三合一.tar", @"d:\半条命1三合一.tar.fl2");
-            compressor.CompressLevel = FL2.CompressionLevelMax;
-            byte[] compressed = compressor.Compress(File.ReadAllBytes(@"D:\工作流测试请求.bin"));
+            compressor.Compress(@"d:\半条命1三合一.tar", @"d:\半条命1三合一.fl2");
+            
+            //byte[] compressed = compressor.Compress(File.ReadAllBytes(@"D:\工作流测试请求.bin"));
 
-            using (var fs = File.OpenWrite(@"d:\NatTypeTester.fl2"))
-            {
-                fs.Write(compressed, 0, compressed.Length);
-            }
-            //byte[] compressed = File.ReadAllBytes(dstFile.FullName);
-
+            //using (var fs = File.OpenWrite(@"d:\NatTypeTester.fl2"))
+            //{
+            //    fs.Write(compressed, 0, compressed.Length);
+            //}
+            byte[] compressed = File.ReadAllBytes(@"D:\半条命1三合一.fl2");
+            ulong decompressedSize = FL2.FindDecompressedSize(@"D:\半条命1三合一.fl2");
             //byte[] recovery = FL2.DecompressMT(compressed,0);
-            byte[] origin = File.ReadAllBytes(@"D:\工作流测试请求.bin");
+            byte[] origin = File.ReadAllBytes(@"D:\半条命1三合一.tar");
 
             //byte[] hash1 = SHA256.HashData(recovery);
             //byte[] hash2 = SHA256.HashData(origin);
@@ -45,23 +45,26 @@ namespace Demo
             //{
             //    recoveryFile.Write(recovery);
             //}
-            nint streamCtx = ExternMethods.FL2_createDStream();
+            nint streamCtx = NativeMethods.FL2_createDStream();
 
 
-            nuint code = ExternMethods.FL2_initDStream(streamCtx);
+            nuint code = NativeMethods.FL2_initDStream(streamCtx);
 
-            byte[] buffer = new byte[81920];
+            byte[] buffer = new byte[1024*1024];
             using (MemoryStream recoveryStream = new MemoryStream())
             {
                 using (MemoryStream ms = new MemoryStream(compressed))
                 {
                     using (DecompressionStream ds = new DecompressionStream(ms))
                     {
+                        
                         int reads = 0;
                         while ((reads = ds.Read(buffer, 0, buffer.Length)) != 0)
                         {
-                            PrintHex(buffer[0..reads]);
+                            //PrintHex(buffer[0..reads]);
                             recoveryStream.Write(buffer, 0, reads);
+                            float progress = (float)ds.Progress/(float)decompressedSize;
+                            Console.WriteLine($"{progress:P2}");
                         }
                     }
                 }

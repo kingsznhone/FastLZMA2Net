@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 
 namespace FastLZMA2Net
 {
-    public static unsafe partial class ExternMethods
+    public static unsafe partial class NativeMethods
     {
-        static ExternMethods()
+        static NativeMethods()
         {
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 SetWinDllDirectory();

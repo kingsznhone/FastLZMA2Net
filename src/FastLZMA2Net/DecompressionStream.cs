@@ -1,16 +1,13 @@
-﻿using System;
-using System.Drawing;
-using System.IO;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace FastLZMA2Net
 {
     public class DecompressionStream : Stream, IDisposable
     {
         private readonly int bufferSize = 81920;
-        private byte[] compressedBuffer;
-        GCHandle inHandle;
-        FL2InBuffer inBuffer;
+        private byte[] inputBufferArray;
+        private GCHandle inputBufferHandle;
+        private FL2InBuffer inBuffer;
         private bool disposedValue = false;
         private readonly Stream _innerStream;
         private readonly nint _context;
@@ -18,32 +15,35 @@ namespace FastLZMA2Net
         public override bool CanWrite => _innerStream != null && _innerStream.CanWrite;
         public override bool CanSeek => false;
         public override long Length => throw new NotSupportedException();
+
         public override long Position
         {
             get => throw new NotSupportedException();
             set => throw new NotSupportedException();
         }
 
-        public DecompressionStream(Stream innerStream):this(innerStream, 81920) { }
-        
-        public DecompressionStream(Stream innerStream,int inBufferSize)
+        public DecompressionStream(Stream innerStream) : this(innerStream, 81920)
+        {
+        }
+
+        public DecompressionStream(Stream innerStream, int inBufferSize)
         {
             bufferSize = inBufferSize;
-            _innerStream  = innerStream;
-            _context = ExternMethods.FL2_createDStream();
-            var code= ExternMethods.FL2_initDStream(_context);
+            _innerStream = innerStream;
+            _context = NativeMethods.FL2_createDStream();
+            var code = NativeMethods.FL2_initDStream(_context);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
             }
-            // Compressed stream input buffer 
-            compressedBuffer = new byte[_innerStream.Length < bufferSize ? _innerStream.Length : bufferSize];
-            int bytesRead= _innerStream.Read(compressedBuffer,0, compressedBuffer.Length);
-            inHandle = GCHandle.Alloc(compressedBuffer, GCHandleType.Pinned);
+            // Compressed stream input buffer
+            inputBufferArray = new byte[_innerStream.Length < bufferSize ? _innerStream.Length : bufferSize];
+            int bytesRead = _innerStream.Read(inputBufferArray, 0, inputBufferArray.Length);
+            inputBufferHandle = GCHandle.Alloc(inputBufferArray, GCHandleType.Pinned);
             inBuffer = new FL2InBuffer()
             {
-                src = inHandle.AddrOfPinnedObject(),
-                size =(nuint) bytesRead,
+                src = inputBufferHandle.AddrOfPinnedObject(),
+                size = (nuint)bytesRead,
                 pos = 0
             };
         }
@@ -52,89 +52,107 @@ namespace FastLZMA2Net
         {
             _innerStream.Flush();
         }
+
         public override void CopyTo(Stream destination, int bufferSize)
         {
             byte[] outBufferArray = new byte[bufferSize];
-            GCHandle outHandle = GCHandle.Alloc(outBufferArray, GCHandleType.Pinned);
-            FL2OutBuffer outBuffer = new FL2OutBuffer()
-            {
-                dst = outHandle.AddrOfPinnedObject(),
-                size = (nuint)bufferSize,
-                pos = 0
-            };
-            nuint code;
+            Span<byte> outBufferSpan = outBufferArray.AsSpan();
+            int bytesRead = 0;
             do
             {
-                code = ExternMethods.FL2_decompressStream(_context, ref outBuffer, ref inBuffer);
-                if (FL2Exception.IsError(code))
-                {
-                    if (FL2Exception.GetErrorCode(code) != FL2ErrorCode.buffer)
-                    {
-                        throw new FL2Exception(code);
-                    }
-                }
-                if (inBuffer.size == inBuffer.pos)
-                {
-                    int bytesRead = _innerStream.Read(compressedBuffer, 0, compressedBuffer.Length);
-                    inBuffer.size = (nuint)bytesRead;
-                    inBuffer.pos = 0;
-                }
-
-                destination.Write(outBufferArray, 0, (int)outBuffer.pos);
-                outBuffer.pos = 0;
-            } while (code == 1);
-            outHandle.Free();
+                bytesRead = Read(outBufferSpan);
+                destination.Write(outBufferArray, 0, bytesRead);
+            } while (bytesRead != 0);
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
+        public ulong Progress => NativeMethods.FL2_getDStreamProgress(_context);
+
+        public override unsafe int Read(byte[] buffer, int offset, int count)
         {
-            // stream output buffer 
-            GCHandle outHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            FL2OutBuffer outBuffer = new FL2OutBuffer()
-            {
-                dst = outHandle.AddrOfPinnedObject() + offset,
-                size = (nuint)count,
-                pos = 0
-            };
-            nuint code;
-            do
-            {
-                code = ExternMethods.FL2_decompressStream(_context, ref outBuffer, ref inBuffer);
-                if (FL2Exception.IsError(code))
-                {
-                    if (FL2Exception.GetErrorCode(code) != FL2ErrorCode.buffer)
-                    {
-                        throw new FL2Exception(code);
-                    }
-                }
-                if (inBuffer.size == inBuffer.pos)
-                {
-                    int bytesRead = _innerStream.Read(compressedBuffer, 0, compressedBuffer.Length);
-                    inBuffer.size =(nuint) bytesRead;
-                    inBuffer.pos = 0;
-                }
-            } while (code == 1);
-            
-            outHandle.Free();
-
-            return (int)outBuffer.pos;
+            return Read(buffer.AsSpan(offset, count));
         }
 
-        public override long Seek(long offset, SeekOrigin origin)=>throw new NotSupportedException();
+        public override int Read(Span<byte> buffer)
+        {
+            return DecompressCore(buffer);
+        }
+
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            Memory<byte> bufferMemory = buffer.AsMemory(offset, count);
+            return ReadAsync(buffer, cancellationToken).AsTask();
+        }
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            _innerStream.ReadAsync(new byte[10], 0, 0);
+            return new ValueTask<int>(DecompressCore(buffer.Span, cancellationToken));
+        }
+
+        private unsafe int DecompressCore(Span<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            ref byte ref_buffer = ref MemoryMarshal.GetReference(buffer);
+            fixed (byte* pBuffer = &ref_buffer)
+            {
+                FL2OutBuffer outBuffer = new FL2OutBuffer()
+                {
+                    dst = (nint)pBuffer,
+                    size = (nuint)buffer.Length,
+                    pos = 0
+                };
+
+                nuint code;
+                do
+                {
+                    code = NativeMethods.FL2_decompressStream(_context, ref outBuffer, ref inBuffer);
+                    if (FL2Exception.IsError(code))
+                    {
+                        if (FL2Exception.GetErrorCode(code) != FL2ErrorCode.buffer)
+                        {
+                            throw new FL2Exception(code);
+                        }
+                    }
+                    if (inBuffer.size == inBuffer.pos)
+                    {
+                        int bytesRead = _innerStream.Read(inputBufferArray, 0, inputBufferArray.Length);
+                        inBuffer.size = (nuint)bytesRead;
+                        inBuffer.pos = 0;
+                    }
+                } while (code == 1 || !cancellationToken.IsCancellationRequested);
+                return (int)outBuffer.pos;
+            }
+        }
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
         public override void SetLength(long value) => throw new NotSupportedException();
 
-        public override void Write(byte[] buffer, int offset, int count) =>throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override void Write(ReadOnlySpan<byte> buffer) => throw new NotSupportedException();
+
+        public override int ReadByte() => throw new NotSupportedException();
+
+        public override void Close() => Dispose(true);
+
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+
+        public override void WriteByte(byte value)
+            => throw new NotSupportedException();
 
         protected override void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
-                if (disposing) 
+                if (disposing)
                 {
-                    inHandle.Free();
+                    inputBufferHandle.Free();
                 }
-                ExternMethods.FL2_freeDStream(_context);
+                NativeMethods.FL2_freeDStream(_context);
                 disposedValue = true;
             }
         }

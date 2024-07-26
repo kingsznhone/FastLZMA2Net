@@ -9,8 +9,8 @@ namespace FastLZMA2Net
         private bool disposed = false;
         private bool disposedValue;
 
-        public uint ThreadCount => ExternMethods.FL2_getCCtxThreadCount(_context);
-        public byte DictSizeProperty => ExternMethods.FL2_getCCtxDictProp(_context);
+        public uint ThreadCount => NativeMethods.FL2_getCCtxThreadCount(_context);
+        public byte DictSizeProperty => NativeMethods.FL2_getCCtxDictProp(_context);
 
         public int CompressLevel
         {
@@ -44,12 +44,12 @@ namespace FastLZMA2Net
 
         public Compressor()
         {
-            _context = ExternMethods.FL2_createCCtx();
+            _context = NativeMethods.FL2_createCCtx();
         }
 
         public Compressor(uint nThread)
         {
-            _context = ExternMethods.FL2_createCCtxMt(nThread);
+            _context = NativeMethods.FL2_createCCtxMt(nThread);
         }
 
         public byte[] Compress(byte[] data)
@@ -60,7 +60,7 @@ namespace FastLZMA2Net
         public byte[] Compress(byte[] data, int Level)
         {
             byte[] buffer = new byte[FL2.FindCompressBound(data)];
-            nuint code = ExternMethods.FL2_compressCCtx(_context, buffer, (nuint)buffer.Length, data, (nuint)data.Length, Level);
+            nuint code = NativeMethods.FL2_compressCCtx(_context, buffer, (nuint)buffer.Length, data, (nuint)data.Length, Level);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -75,14 +75,14 @@ namespace FastLZMA2Net
             FileInfo destFile = new FileInfo(dstPath);
             using (DirectFileAccessor accessorSrc = new DirectFileAccessor(sourceFile.FullName, FileMode.Open, null, sourceFile.Length, MemoryMappedFileAccess.ReadWrite))
             {
-                bound = ExternMethods.FL2_compressBound((nuint)sourceFile.Length);
+                bound = NativeMethods.FL2_compressBound((nuint)sourceFile.Length);
                 if (FL2Exception.IsError(bound))
                 {
                     throw new FL2Exception(bound);
                 }
                 using (DirectFileAccessor accessorDst = new DirectFileAccessor(destFile.FullName, FileMode.OpenOrCreate, null, sourceFile.Length, MemoryMappedFileAccess.ReadWrite))
                 {
-                    bound = ExternMethods.FL2_compressCCtx(_context, accessorDst.mmPtr, bound, accessorSrc.mmPtr, (nuint)sourceFile.Length, CompressLevel);
+                    bound = NativeMethods.FL2_compressCCtx(_context, accessorDst.mmPtr, bound, accessorSrc.mmPtr, (nuint)sourceFile.Length, CompressLevel);
                     if (FL2Exception.IsError(bound))
                     {
                         throw new FL2Exception(bound);
@@ -99,7 +99,7 @@ namespace FastLZMA2Net
 
         public nuint SetParameter(CompressParameterEnum param, nuint value)
         {
-            nuint code = ExternMethods.FL2_CCtx_setParameter(_context, param, value);
+            nuint code = NativeMethods.FL2_CCtx_setParameter(_context, param, value);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -109,7 +109,7 @@ namespace FastLZMA2Net
 
         public nuint GetParameter(CompressParameterEnum param)
         {
-            var code = ExternMethods.FL2_CCtx_getParameter(_context, param);
+            var code = NativeMethods.FL2_CCtx_getParameter(_context, param);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -122,7 +122,7 @@ namespace FastLZMA2Net
             if (!disposedValue)
             {
                 if (disposing) { }
-                ExternMethods.FL2_freeCCtx(_context);
+                NativeMethods.FL2_freeCCtx(_context);
                 disposedValue = true;
             }
         }

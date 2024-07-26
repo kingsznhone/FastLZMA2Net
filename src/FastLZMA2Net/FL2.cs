@@ -49,12 +49,12 @@ namespace FastLZMA2Net
         /// <summary>
         /// maximum compression level available
         /// </summary>
-        public static int CompressionLevelMax => ExternMethods.FL2_maxCLevel();
+        public static int CompressionLevelMax => NativeMethods.FL2_maxCLevel();
 
         /// <summary>
         /// maximum compression level available in high mode
         /// </summary>
-        public static int HighCompressionLevelMax => ExternMethods.FL2_maxHighCLevel();
+        public static int HighCompressionLevelMax => NativeMethods.FL2_maxHighCLevel();
 
         #endregion Properties
 
@@ -63,7 +63,7 @@ namespace FastLZMA2Net
         public static CompressionParameters GetPresetLevelParameters(int level, int high)
         {
             CompressionParameters parameters = new();
-            nuint code = ExternMethods.FL2_getLevelParameters(level, high, ref parameters);
+            nuint code = NativeMethods.FL2_getLevelParameters(level, high, ref parameters);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -78,12 +78,12 @@ namespace FastLZMA2Net
         /// <returns></returns>
         public static nuint FindCompressBound(byte[] src)
         {
-            return ExternMethods.FL2_compressBound((nuint)src.Length);
+            return NativeMethods.FL2_compressBound((nuint)src.Length);
         }
 
         public static nuint FindCompressBound(nuint streamSize)
         {
-            return ExternMethods.FL2_compressBound(streamSize);
+            return NativeMethods.FL2_compressBound(streamSize);
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace FastLZMA2Net
         public static nuint FindDecompressedSize(byte[] data)
         {
             var ContentSizeError = nuint.MaxValue;
-            nuint size = ExternMethods.FL2_findDecompressedSize(data, (nuint)data.LongLength);
+            nuint size = NativeMethods.FL2_findDecompressedSize(data, (nuint)data.LongLength);
             if (size == ContentSizeError)
             {
                 throw new FL2Exception(size);
@@ -112,7 +112,7 @@ namespace FastLZMA2Net
             }
             using (DirectFileAccessor accessor = new DirectFileAccessor(filePath, FileMode.Open, null, file.Length, MemoryMappedFileAccess.ReadWrite))
             {
-                var size = ExternMethods.FL2_findDecompressedSize(accessor.mmPtr, (nuint)file.Length);
+                var size = NativeMethods.FL2_findDecompressedSize(accessor.mmPtr, (nuint)file.Length);
                 if (size == nuint.MaxValue)
                 {
                     throw new FL2Exception(size);
@@ -123,8 +123,8 @@ namespace FastLZMA2Net
 
         public static byte[] Compress(byte[] data, int Level)
         {
-            byte[] compressed = new byte[ExternMethods.FL2_compressBound((nuint)data.Length)];
-            nuint code = ExternMethods.FL2_compress(compressed, (nuint)compressed.Length, data, (nuint)data.Length, Level);
+            byte[] compressed = new byte[NativeMethods.FL2_compressBound((nuint)data.Length)];
+            nuint code = NativeMethods.FL2_compress(compressed, (nuint)compressed.Length, data, (nuint)data.Length, Level);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -134,8 +134,8 @@ namespace FastLZMA2Net
 
         public static byte[] CompressMT(byte[] data, int Level, uint nbThreads)
         {
-            byte[] compressed = new byte[ExternMethods.FL2_compressBound((nuint)data.Length)];
-            nuint code = ExternMethods.FL2_compressMt(compressed, (nuint)compressed.Length, data, (nuint)data.Length, Level, nbThreads);
+            byte[] compressed = new byte[NativeMethods.FL2_compressBound((nuint)data.Length)];
+            nuint code = NativeMethods.FL2_compressMt(compressed, (nuint)compressed.Length, data, (nuint)data.Length, Level, nbThreads);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -145,9 +145,9 @@ namespace FastLZMA2Net
 
         public static byte[] Decompress(byte[] data)
         {
-            nuint decompressedSize = ExternMethods.FL2_findDecompressedSize(data, (nuint)data.Length);
+            nuint decompressedSize = NativeMethods.FL2_findDecompressedSize(data, (nuint)data.Length);
             byte[] decompressed = new byte[decompressedSize];
-            nuint code = ExternMethods.FL2_decompress(decompressed, decompressedSize, data, (nuint)data.Length);
+            nuint code = NativeMethods.FL2_decompress(decompressed, decompressedSize, data, (nuint)data.Length);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -157,9 +157,9 @@ namespace FastLZMA2Net
 
         public static byte[] DecompressMT(byte[] data, uint nbThreads)
         {
-            nuint decompressedSize = ExternMethods.FL2_findDecompressedSize(data, (nuint)data.Length);
+            nuint decompressedSize = NativeMethods.FL2_findDecompressedSize(data, (nuint)data.Length);
             byte[] decompressed = new byte[decompressedSize];
-            nuint code = ExternMethods.FL2_decompressMt(decompressed, decompressedSize, data, (nuint)data.Length, nbThreads);
+            nuint code = NativeMethods.FL2_decompressMt(decompressed, decompressedSize, data, (nuint)data.Length, nbThreads);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -168,18 +168,18 @@ namespace FastLZMA2Net
         }
 
         public static nuint EstimateCompressMemoryUsage(int compressionLevel, uint nbThreads)
-            => ExternMethods.FL2_estimateCCtxSize(compressionLevel, nbThreads);
+            => NativeMethods.FL2_estimateCCtxSize(compressionLevel, nbThreads);
 
         public static nuint EstimateCompressMemoryUsage(CompressionParameters parameters, uint nbThreads)
-            => ExternMethods.FL2_estimateCCtxSize_byParams(ref parameters, nbThreads);
+            => NativeMethods.FL2_estimateCCtxSize_byParams(ref parameters, nbThreads);
 
         public static nuint EstimateCompressMemoryUsage(nint context)
-            => ExternMethods.FL2_estimateCCtxSize_usingCCtx(context);
+            => NativeMethods.FL2_estimateCCtxSize_usingCCtx(context);
 
         public static nuint EstimateDecompressMemoryUsage(uint nbThreads)
-            => ExternMethods.FL2_estimateDCtxSize(nbThreads);
+            => NativeMethods.FL2_estimateDCtxSize(nbThreads);
 
         public static nuint GetDictSizeFromProp(byte prop)
-            => ExternMethods.FL2_getDictSizeFromProp(prop);
+            => NativeMethods.FL2_getDictSizeFromProp(prop);
     }
 }
