@@ -218,6 +218,97 @@ namespace FastLZMA2Net
 
         #endregion Decompress Context
 
+        #region Compress Stream
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nint FL2_createCStream();
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nint FL2_createCStreamMt(uint nbThreads, int dualBuffer);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial void FL2_freeCStream(nint fcs);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_initCStream(nint fcs, int compressionLevel);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_setCStreamTimeout(nint fcs, uint timeout);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_compressStream(nint fcs, ref FL2OutBuffer output, ref FL2InBuffer input);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_copyCStreamOutput(nint fcs, ref FL2OutBuffer output);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_getDictionaryBuffer(nint fcs, ref FL2DictBuffer dict);
+
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_updateDictionary(nint fcs, nuint addedSize);
+
+[LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_getNextCompressedBuffer(nint fcs,ref  FL2cBuffer cbuf);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_getCStreamProgress(nint fcs, ulong outputSize);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_waitCStream(nint fcs);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial void FL2_cancelCStream(nint fcs);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_remainingOutputSize(nint fcs);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_flushStream(nint fcs, ref FL2OutBuffer output);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_endStream(nint fcs, ref FL2OutBuffer output);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_CStream_setParameter(nint fcs, CompressParameterEnum param, nuint value);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_CStream_getParameter(nint fcs, CompressParameterEnum param);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_estimateCStreamSize(int compressionLevel, uint nbThreads, int dualBuffer);
+
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_estimateCStreamSize_byParams(ref CompressionParameters parameters, uint nbThreads, int dualBuffer);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_estimateCStreamSize_usingCStream(nint fcs);
+
+
+
+        #endregion
+
         #region Decompress Stream
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
@@ -263,6 +354,10 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial nuint FL2_decompressStream(nint fds, ref FL2OutBuffer output, ref FL2InBuffer input);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial nuint FL2_estimateDStreamSize(nuint dictSize, uint nbThreads);
 
         #endregion Decompress Stream
     }

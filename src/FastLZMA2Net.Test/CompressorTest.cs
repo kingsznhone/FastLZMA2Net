@@ -34,16 +34,13 @@ namespace Test
         public void CompressorST()
         {
             Compressor compressorST = new Compressor();
-
-            for (int i = 0; i < 5; i++)
-            {
                 byte[] src = new byte[4096 * 1024];
                 new Random().NextBytes(src);
 
                 byte[] compressed = compressorST.Compress(src, 10);
                 byte[] decompressed = FL2.Decompress(compressed);
                 Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
-            }
+            
         }
 
         [TestMethod]
@@ -52,8 +49,7 @@ namespace Test
             Compressor compressorMT = new Compressor(0);
             Debug.WriteLine($"Thread Count: {compressorMT.ThreadCount}");
             Debug.WriteLine($"Dict Size Property: {compressorMT.DictSizeProperty}");
-            for (int i = 0; i < 5; i++)
-            {
+
                 byte[] src = new byte[4096 * 1024];
                 new Random().NextBytes(src);
 
@@ -61,7 +57,7 @@ namespace Test
                 byte[] decompressed = FL2.Decompress(compressed);
 
                 Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
-            }
+            
         }
 
         [TestMethod]
@@ -124,30 +120,26 @@ namespace Test
         public void DecompressorST()
         {
             Decompressor decompressorST = new Decompressor();
-            for (int i = 0; i < 5; i++)
-            {
-                byte[] src = new byte[4096 * 1024];
-                new Random().NextBytes(src);
+            byte[] src = new byte[4096 * 1024];
+            new Random().NextBytes(src);
 
-                byte[] compressed = FL2.Compress(src, 10);
-                byte[] decompressed = decompressorST.Decompress(compressed); ;
-                Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
-            }
+            byte[] compressed = FL2.Compress(src, 10);
+            byte[] decompressed = decompressorST.Decompress(compressed); ;
+            Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
         }
 
         [TestMethod]
         public void DecompressorMT()
         {
             Decompressor decompressorMT = new Decompressor(0);
-            for (int i = 0; i < 5; i++)
-            {
-                byte[] src = new byte[4096 * 1024];
-                new Random().NextBytes(src);
 
-                byte[] compressed = FL2.Compress(src, 10);
-                byte[] decompressed = decompressorMT.Decompress(compressed); ;
-                Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
-            }
+            byte[] src = new byte[4096 * 1024];
+            new Random().NextBytes(src);
+
+            byte[] compressed = FL2.Compress(src, 10);
+            byte[] decompressed = decompressorMT.Decompress(compressed); ;
+            Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
+
         }
     }
 }

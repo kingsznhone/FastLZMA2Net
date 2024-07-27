@@ -146,6 +146,10 @@ namespace FastLZMA2Net
         public static byte[] Decompress(byte[] data)
         {
             nuint decompressedSize = NativeMethods.FL2_findDecompressedSize(data, (nuint)data.Length);
+            if (FL2Exception.IsError(decompressedSize))
+            {
+                throw new FL2Exception(decompressedSize);
+            }
             byte[] decompressed = new byte[decompressedSize];
             nuint code = NativeMethods.FL2_decompress(decompressed, decompressedSize, data, (nuint)data.Length);
             if (FL2Exception.IsError(code))

@@ -52,15 +52,28 @@ namespace FastLZMA2Net
             _context = NativeMethods.FL2_createCCtxMt(nThread);
         }
 
-        public byte[] Compress(byte[] data)
+        public Task<byte[]> CompressAsync(byte[] src)
         {
-            return Compress(data, 0);
+            return Task.Run(() => Compress(src));
+        }
+        public Task<byte[]> CompressAsync(byte[] src, int Level)
+        {
+            return Task.Run(() => Compress(src,Level));
+        }
+        public byte[] Compress(byte[] src)
+        {
+            return Compress(src, 0);
         }
 
-        public byte[] Compress(byte[] data, int Level)
+        public byte[] Compress(byte[] src, int Level)
         {
-            byte[] buffer = new byte[FL2.FindCompressBound(data)];
-            nuint code = NativeMethods.FL2_compressCCtx(_context, buffer, (nuint)buffer.Length, data, (nuint)data.Length, Level);
+            if (src is null)
+            {
+                throw new ArgumentNullException(nameof(src));
+            }
+
+            byte[] buffer = new byte[FL2.FindCompressBound(src)];
+            nuint code = NativeMethods.FL2_compressCCtx(_context, buffer, (nuint)buffer.Length, src, (nuint)src.Length, Level);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);

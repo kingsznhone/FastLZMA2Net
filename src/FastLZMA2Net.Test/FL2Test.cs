@@ -7,6 +7,10 @@ namespace Test
     [TestClass]
     public class SimpleTest
     {
+        public SimpleTest()
+        {
+            File.WriteAllBytes(@"Resources/dummy.fl2", FL2.CompressMT(File.ReadAllBytes(@"Resources/dummy.raw"), 9, 0));
+        }
 
         [TestMethod]
         public void Simple()

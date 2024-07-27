@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.IO.Compression;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -7,9 +9,9 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Demo
 {
-    internal unsafe class Program
+    internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             int size = IntPtr.Size;
             NativeMethods.SetWinDllDirectory();
@@ -18,65 +20,49 @@ namespace Demo
             {
                 src[i] = (byte)(i % 0xf); // 使用模运算确保值在 0x0 到 0xf 之间
             }
-
-            //new Random().NextBytes(src);
-            Compressor compressor = new(0) { CompressLevel = 1 };
-
-            FileInfo srcFile = new FileInfo(@"d:\NatTypeTester.exe");
-            FileInfo dstFile = new FileInfo(@"d:\NatTypeTester.fl2");
-            compressor.Compress(@"d:\半条命1三合一.tar", @"d:\半条命1三合一.fl2");
             
-            //byte[] compressed = compressor.Compress(File.ReadAllBytes(@"D:\工作流测试请求.bin"));
-
-            //using (var fs = File.OpenWrite(@"d:\NatTypeTester.fl2"))
-            //{
-            //    fs.Write(compressed, 0, compressed.Length);
-            //}
-            byte[] compressed = File.ReadAllBytes(@"D:\半条命1三合一.fl2");
-            ulong decompressedSize = FL2.FindDecompressedSize(@"D:\半条命1三合一.fl2");
-            //byte[] recovery = FL2.DecompressMT(compressed,0);
+            Compressor compressor = new(0) { CompressLevel = 10,HighCompressLevel=1};
+            Console.WriteLine( compressor.DictSizeProperty);
+            FileInfo srcFile = new FileInfo(@"d:\ffmpeg.exe");
+            FileInfo dstFile = new FileInfo(@"d:\半条命1三合一.fl2");
+            //compressor.Compress(@"d:\半条命1三合一.tar", @"d:\半条命1三合一.fl2");
             byte[] origin = File.ReadAllBytes(@"D:\半条命1三合一.tar");
-
-            //byte[] hash1 = SHA256.HashData(recovery);
-            //byte[] hash2 = SHA256.HashData(origin);
-
-            //var cmp = hash1.SequenceEqual(hash2);
-            //using (FileStream recoveryFile = File.OpenWrite("D:\\recovery.tar"))
-            //{
-            //    recoveryFile.Write(recovery);
-            //}
-            nint streamCtx = NativeMethods.FL2_createDStream();
-
-
-            nuint code = NativeMethods.FL2_initDStream(streamCtx);
-
-            byte[] buffer = new byte[1024*1024];
-            using (MemoryStream recoveryStream = new MemoryStream())
-            {
-                using (MemoryStream ms = new MemoryStream(compressed))
-                {
-                    using (DecompressionStream ds = new DecompressionStream(ms))
-                    {
-                        
-                        int reads = 0;
-                        while ((reads = ds.Read(buffer, 0, buffer.Length)) != 0)
-                        {
-                            //PrintHex(buffer[0..reads]);
-                            recoveryStream.Write(buffer, 0, reads);
-                            float progress = (float)ds.Progress/(float)decompressedSize;
-                            Console.WriteLine($"{progress:P2}");
-                        }
-                    }
-                }
-                byte[] dsResult = recoveryStream.ToArray();
-                var same = origin.SequenceEqual(dsResult);
-            }
+            byte[] compressedRef = File.ReadAllBytes(@"D:\半条命1三合一.fl2");
             
-            if (FL2Exception.IsError(code))
+            using FileStream sourceFile = File.OpenRead(@"D:\Devotion v1.05.tar");
+            using FileStream compressedFile = File.OpenRead(@"D:\Devotion v1.05.tar.fl2");
+            using FileStream recoveryFile = File.OpenWrite(@"D:\recovery.tar");
+
+            var length = recoveryFile.Length;
+            byte[] buffer = new byte[256 * 1024 * 1024];
+            //using (DecompressionStream ds = new DecompressionStream(compressedFile))
+            //{
+            //    ds.CopyTo(recoveryFile);
+            //}
+
+            return;
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            using (CompressionStream cs = new CompressionStream(compressedFile, outBufferSize: 64 * 1024 * 1024, nbThreads: 0))
             {
-                throw new FL2Exception(code);
+                var clevel = cs.GetParameter(CompressParameterEnum.FL2_p_compressionLevel);
+                long offset = 0;
+                while (offset < sourceFile.Length)
+                {
+                    long remaining = sourceFile.Length - offset;
+                    int bytesToWrite =(int) Math.Min(64 * 1024 * 1024, remaining);
+                    sourceFile.Read(buffer, 0, bytesToWrite);
+                    cs.Append(buffer,0, bytesToWrite);
+                    offset += bytesToWrite;
+                }
+                cs.Flush();
             }
-            Console.WriteLine(code);
+
+            sw.Stop();
+           
+            sourceFile.Close();
+            compressedFile.Close();
+            Console.WriteLine($"{sw.Elapsed.TotalSeconds}s");
         }
 
         private static void PrintHex(byte[] byteArray)

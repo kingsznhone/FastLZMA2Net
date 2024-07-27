@@ -1,18 +1,19 @@
 ﻿using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace FastLZMA2Net
 {
     public class DecompressionStream : Stream, IDisposable
     {
-        private readonly int bufferSize = 81920;
+        private readonly int bufferSize = 16*1024*1024;
         private byte[] inputBufferArray;
         private GCHandle inputBufferHandle;
         private FL2InBuffer inBuffer;
-        private bool disposedValue = false;
+        private bool disposed = false;
         private readonly Stream _innerStream;
         private readonly nint _context;
         public override bool CanRead => _innerStream != null && _innerStream.CanRead;
-        public override bool CanWrite => _innerStream != null && _innerStream.CanWrite;
+        public override bool CanWrite => false;
         public override bool CanSeek => false;
         public override long Length => throw new NotSupportedException();
 
@@ -22,20 +23,25 @@ namespace FastLZMA2Net
             set => throw new NotSupportedException();
         }
 
-        public DecompressionStream(Stream innerStream) : this(innerStream, 81920)
-        {
-        }
-
-        public DecompressionStream(Stream innerStream, int inBufferSize)
+        public DecompressionStream(Stream innerStream, uint nbThreads=0,int inBufferSize= 16 * 1024 * 1024)
         {
             bufferSize = inBufferSize;
             _innerStream = innerStream;
-            _context = NativeMethods.FL2_createDStream();
+            
+            if (nbThreads ==1)
+            {
+                _context = NativeMethods.FL2_createDStream();
+            }
+            else
+            {
+                _context = NativeMethods.FL2_createDStreamMt(nbThreads);
+            }
             var code = NativeMethods.FL2_initDStream(_context);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
             }
+            
             // Compressed stream input buffer
             inputBufferArray = new byte[_innerStream.Length < bufferSize ? _innerStream.Length : bufferSize];
             int bytesRead = _innerStream.Read(inputBufferArray, 0, inputBufferArray.Length);
@@ -53,7 +59,9 @@ namespace FastLZMA2Net
             _innerStream.Flush();
         }
 
-        public override void CopyTo(Stream destination, int bufferSize)
+        public new void CopyTo(Stream destination) => CopyTo(destination, 256 * 1024 * 1024);
+
+        public override void CopyTo(Stream destination, int bufferSize= 256 * 1024 * 1024)
         {
             byte[] outBufferArray = new byte[bufferSize];
             Span<byte> outBufferSpan = outBufferArray.AsSpan();
@@ -91,6 +99,9 @@ namespace FastLZMA2Net
 
         private unsafe int DecompressCore(Span<byte> buffer, CancellationToken cancellationToken = default)
         {
+            // Set the memory limit for the decompression stream under MT. Otherwise decode will failed if buffer is too small.
+            // Guess 64mb buffer is enough for most case.
+            //NativeMethods.FL2_setDStreamMemoryLimitMt(_context, (nuint)64 * 1024 * 1024);
             ref byte ref_buffer = ref MemoryMarshal.GetReference(buffer);
             fixed (byte* pBuffer = &ref_buffer)
             {
@@ -104,6 +115,7 @@ namespace FastLZMA2Net
                 nuint code;
                 do
                 {
+                    // 0 finish,1 decoding
                     code = NativeMethods.FL2_decompressStream(_context, ref outBuffer, ref inBuffer);
                     if (FL2Exception.IsError(code))
                     {
@@ -112,13 +124,23 @@ namespace FastLZMA2Net
                             throw new FL2Exception(code);
                         }
                     }
-                    if (inBuffer.size == inBuffer.pos)
+                    //output is full
+                    if (outBuffer.pos == outBuffer.size)
+                    {
+                        break;
+                    }
+                    //decode complete and no more input
+                    if (code ==0 && inBuffer.size == 0)
+                    {
+                        break;
+                    }
+                    if (code ==0|| inBuffer.size== inBuffer.pos)
                     {
                         int bytesRead = _innerStream.Read(inputBufferArray, 0, inputBufferArray.Length);
                         inBuffer.size = (nuint)bytesRead;
                         inBuffer.pos = 0;
                     }
-                } while (code == 1 && !cancellationToken.IsCancellationRequested);
+                } while (!cancellationToken.IsCancellationRequested);
                 return (int)outBuffer.pos;
             }
         }
@@ -146,14 +168,14 @@ namespace FastLZMA2Net
 
         protected override void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!disposed)
             {
                 if (disposing)
                 {
                     inputBufferHandle.Free();
                 }
                 NativeMethods.FL2_freeDStream(_context);
-                disposedValue = true;
+                disposed = true;
             }
         }
 
