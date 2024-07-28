@@ -43,7 +43,7 @@ byte[] decompressed = FL2.Decompress(compressed);
 
 ### Context Compression
 
-When you have many small file, consider using context.
+When you have many small file, consider using context to avoid alloc overhead
 
 ```c#
 // Context compression, context can be reuse.
