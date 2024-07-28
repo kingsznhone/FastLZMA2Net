@@ -28,7 +28,7 @@ x86 arch may have potential malfunction.
 
 # Usage
 
-## Simple compression
+### Simple compression
 
 When using compression occasionally
 
@@ -43,7 +43,7 @@ byte[] compressed = FL2.Compress(origin,0);
 byte[] decompressed = FL2.Decompress(compressed);
 ```
 
-## Context Compression
+### Context Compression
 
 When you have many small file, consider using context.
 
@@ -61,7 +61,7 @@ decompressed = decompressor.Decompress(compressed);
 ```
 
 
-## Streaming Compression 
+### Streaming Compression 
 
 When you have a very large file (>2GB) or slow I/O
 
