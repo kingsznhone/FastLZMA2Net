@@ -10,8 +10,6 @@ Fast LZMA2 Wrapper for .NET
 
 With respect to [Fast LZMA2](https://github.com/conor42/fast-lzma2)
 
-the most powerful compression algorithm ever.
-
 ![](./readme/benchmark.png)
 
 # Requirements
