@@ -1,11 +1,10 @@
 ﻿using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace FastLZMA2Net
 {
     public class DecompressionStream : Stream, IDisposable
     {
-        private readonly int bufferSize = 16*1024*1024;
+        private readonly int bufferSize = 16 * 1024 * 1024;
         private byte[] inputBufferArray;
         private GCHandle inputBufferHandle;
         private FL2InBuffer inBuffer;
@@ -23,12 +22,12 @@ namespace FastLZMA2Net
             set => throw new NotSupportedException();
         }
 
-        public DecompressionStream(Stream innerStream, uint nbThreads=0,int inBufferSize= 16 * 1024 * 1024)
+        public DecompressionStream(Stream innerStream, uint nbThreads = 0, int inBufferSize = 16 * 1024 * 1024)
         {
             bufferSize = inBufferSize;
             _innerStream = innerStream;
-            
-            if (nbThreads ==1)
+
+            if (nbThreads == 1)
             {
                 _context = NativeMethods.FL2_createDStream();
             }
@@ -41,7 +40,7 @@ namespace FastLZMA2Net
             {
                 throw new FL2Exception(code);
             }
-            
+
             // Compressed stream input buffer
             inputBufferArray = new byte[_innerStream.Length < bufferSize ? _innerStream.Length : bufferSize];
             int bytesRead = _innerStream.Read(inputBufferArray, 0, inputBufferArray.Length);
@@ -61,7 +60,7 @@ namespace FastLZMA2Net
 
         public new void CopyTo(Stream destination) => CopyTo(destination, 256 * 1024 * 1024);
 
-        public override void CopyTo(Stream destination, int bufferSize= 256 * 1024 * 1024)
+        public override void CopyTo(Stream destination, int bufferSize = 256 * 1024 * 1024)
         {
             byte[] outBufferArray = new byte[bufferSize];
             Span<byte> outBufferSpan = outBufferArray.AsSpan();
@@ -130,11 +129,11 @@ namespace FastLZMA2Net
                         break;
                     }
                     //decode complete and no more input
-                    if (code ==0 && inBuffer.size == 0)
+                    if (code == 0 && inBuffer.size == 0)
                     {
                         break;
                     }
-                    if (code ==0|| inBuffer.size== inBuffer.pos)
+                    if (code == 0 || inBuffer.size == inBuffer.pos)
                     {
                         int bytesRead = _innerStream.Read(inputBufferArray, 0, inputBufferArray.Length);
                         inBuffer.size = (nuint)bytesRead;

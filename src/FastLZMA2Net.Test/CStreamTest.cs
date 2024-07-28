@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using FastLZMA2Net;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Test
 {
@@ -61,6 +54,7 @@ namespace Test
                 Debug.Assert(origin.SequenceEqual(recovery));
             }
         }
+
         [TestMethod]
         public async Task TestAsync()
         {
@@ -77,6 +71,34 @@ namespace Test
                 byte[] recovery = FL2.Decompress(compressed);
                 Debug.Assert(origin.SequenceEqual(recovery));
             }
+        }
+
+        [TestMethod]
+        public void TestDFA()
+        {
+            byte[] buffer = new byte[1024];
+            using FileStream sourceFile = File.OpenRead(@"Resources/dummy.raw");
+            using FileStream compressedFile = File.OpenWrite(@"Resources/dummy.fl2");
+            using (CompressionStream cs = new CompressionStream(compressedFile, outBufferSize: 1024, nbThreads: 0))
+            {
+                long offset = 0;
+                while (offset < sourceFile.Length)
+                {
+                    long remaining = sourceFile.Length - offset;
+                    int bytesToWrite = (int)Math.Min(1024, remaining);
+                    sourceFile.Read(buffer, 0, bytesToWrite);
+                    cs.Append(buffer, 0, bytesToWrite);
+                    offset += bytesToWrite;
+                }
+                cs.Flush();
+            }
+
+            sourceFile.Close();
+            compressedFile.Close();
+            byte[] compressed = File.ReadAllBytes(@"Resources/dummy.fl2");
+            byte[] recovery = FL2.Decompress(compressed);
+            byte[] origin = File.ReadAllBytes(@"Resources/dummy.raw");
+            Assert.IsTrue(origin.SequenceEqual(recovery));
         }
     }
 }

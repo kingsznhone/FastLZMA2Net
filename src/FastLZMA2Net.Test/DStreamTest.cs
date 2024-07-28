@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FastLZMA2Net;
+﻿using FastLZMA2Net;
 
 namespace Test
 {
@@ -12,7 +7,7 @@ namespace Test
     {
         public DStreamTest()
         {
-            File.WriteAllBytes(@"Resources/dummy.fl2", FL2.CompressMT(File.ReadAllBytes(@"Resources/dummy.raw"), 9,0));
+            File.WriteAllBytes(@"Resources/dummy.fl2", FL2.CompressMT(File.ReadAllBytes(@"Resources/dummy.raw"), 9, 0));
         }
 
         [TestMethod]
@@ -20,14 +15,14 @@ namespace Test
         {
             //Use Dummy File
             byte[] origin = File.ReadAllBytes(@"Resources/dummy.raw");
-            byte[] compressed = FL2.CompressMT(origin, 5,0);
-            
+            byte[] compressed = FL2.CompressMT(origin, 5, 0);
+
             byte[] buffer = new byte[1024];
             using (MemoryStream recoveryStream = new MemoryStream())
             {
                 using (MemoryStream ms = new MemoryStream(compressed))
                 {
-                    using (DecompressionStream ds = new DecompressionStream(ms, nbThreads:0, inBufferSize: 1024))
+                    using (DecompressionStream ds = new DecompressionStream(ms, nbThreads: 0, inBufferSize: 1024))
                     {
                         int reads = 0;
                         while ((reads = ds.Read(buffer, 0, buffer.Length)) != 0)
@@ -40,6 +35,7 @@ namespace Test
                 Assert.IsTrue(origin.SequenceEqual(recovery));
             }
         }
+
         [TestMethod]
         public async Task TestBlockedAsync()
         {
@@ -56,7 +52,7 @@ namespace Test
                     using (DecompressionStream ds = new DecompressionStream(ms, nbThreads: 0, inBufferSize: 256))
                     {
                         int reads = 0;
-                        while ((reads =await ds.ReadAsync(buffer, 0, buffer.Length)) != 0)
+                        while ((reads = await ds.ReadAsync(buffer, 0, buffer.Length)) != 0)
                         {
                             recoveryStream.Write(buffer, 0, reads);
                         }
@@ -86,11 +82,14 @@ namespace Test
                 Assert.IsTrue(origin.SequenceEqual(recoveryStream.ToArray()));
             }
         }
+
         [TestMethod]
         public void TestDFA()
         {
             //Use Dummy file
             byte[] origin = File.ReadAllBytes(@"Resources/dummy.raw");
+            byte[] compressed = FL2.CompressMT(origin, 0, 0);
+            File.WriteAllBytes(@"Resources/dummy.fl2", compressed);
             //byte[] origin = File.ReadAllBytes(@"Resources/dummy.raw");
             //byte[] compressed = FL2.CompressMT(origin, 1, 0);
 
@@ -109,7 +108,7 @@ namespace Test
 
             //test direct file write
             if (File.Exists(@"Resources/recovery.raw")) { File.Delete(@"Resources/recovery.raw"); }
-            using (FileStream recoveryStream = new FileStream(@"Resources/recovery.raw", FileMode.Open, FileAccess.Read))
+            using (FileStream recoveryStream = new FileStream(@"Resources/recovery.raw", FileMode.OpenOrCreate, FileAccess.Write))
             {
                 using (FileStream fs = new FileStream(@"Resources/dummy.fl2", FileMode.Open, FileAccess.Read))
                 {
@@ -118,9 +117,8 @@ namespace Test
                         ds.CopyTo(recoveryStream);
                     }
                 }
-                Assert.IsTrue(origin.SequenceEqual(File.ReadAllBytes(@"Resources/recovery.raw")));
             }
-
+            Assert.IsTrue(origin.SequenceEqual(File.ReadAllBytes(@"Resources/recovery.raw")));
         }
     }
 }

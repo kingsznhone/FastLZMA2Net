@@ -2,33 +2,30 @@
 {
     public partial class Decompressor : IDisposable
     {
-        private const string LibraryName = "fast-lzma2";
-
-        private nint _context;
+        private readonly nint _DContext;
         private bool disposedValue;
 
-        public uint ThreadCount => NativeMethods.FL2_getDCtxThreadCount(_context);
+        public uint ThreadCount => NativeMethods.FL2_getDCtxThreadCount(_DContext);
 
-        public Decompressor()
+        public Decompressor(uint nbThreads = 0)
         {
-            _context = NativeMethods.FL2_createDCtx();
-        }
-
-        public Decompressor(uint nThread)
-        {
-            _context = NativeMethods.FL2_createDCtxMt(nThread);
+            if (nbThreads == 1)
+            {
+                _DContext = NativeMethods.FL2_createDCtx();
+            }
+            _DContext = NativeMethods.FL2_createDCtxMt(nbThreads);
         }
 
         public void Init(byte prop)
         {
-            NativeMethods.FL2_initDCtx(_context, prop);
+            NativeMethods.FL2_initDCtx(_DContext, prop);
         }
 
         public byte[] Decompress(byte[] data)
         {
             nuint decompressedSize = FL2.FindDecompressedSize(data);
             byte[] decompressed = new byte[decompressedSize];
-            nuint code = NativeMethods.FL2_decompressDCtx(_context, decompressed, decompressedSize, data, (nuint)data.Length);
+            nuint code = NativeMethods.FL2_decompressDCtx(_DContext, decompressed, decompressedSize, data, (nuint)data.Length);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -41,7 +38,7 @@
             if (!disposedValue)
             {
                 if (disposing) { }
-                NativeMethods.FL2_freeDCtx(_context);
+                NativeMethods.FL2_freeDCtx(_DContext);
                 disposedValue = true;
             }
         }

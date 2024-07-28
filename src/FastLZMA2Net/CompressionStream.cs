@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Numerics;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 
 namespace FastLZMA2Net
 {
@@ -16,9 +9,6 @@ namespace FastLZMA2Net
         private GCHandle outputBufferHandle;
         private FL2OutBuffer outBuffer;
 
-        private byte[] dictBufferArray;
-        private GCHandle dictBufferHandle;
-        private FL2DictBuffer dictBuffer;
         private bool disposed = false;
         private readonly Stream _innerStream;
         private readonly nint _context;
@@ -32,12 +22,43 @@ namespace FastLZMA2Net
             get => throw new NotSupportedException();
             set => throw new NotSupportedException();
         }
-        public CompressionStream(Stream innerStream,uint nbThreads =0, int outBufferSize = 32 * 1024 * 1024)
+
+        public int CompressLevel
+        {
+            get => (int)GetParameter(CompressParameterEnum.FL2_p_compressionLevel);
+            set => SetParameter(CompressParameterEnum.FL2_p_compressionLevel, (nuint)value);
+        }
+
+        public int HighCompressLevel
+        {
+            get => (int)GetParameter(CompressParameterEnum.FL2_p_highCompression);
+            set => SetParameter(CompressParameterEnum.FL2_p_highCompression, (nuint)value);
+        }
+
+        public int DictionarySize
+        {
+            get => (int)GetParameter(CompressParameterEnum.FL2_p_dictionarySize);
+            set => SetParameter(CompressParameterEnum.FL2_p_dictionarySize, (nuint)value);
+        }
+
+        public int SearchDepth
+        {
+            get => (int)GetParameter(CompressParameterEnum.FL2_p_searchDepth);
+            set => SetParameter(CompressParameterEnum.FL2_p_searchDepth, (nuint)value);
+        }
+
+        public int FastLength
+        {
+            get => (int)GetParameter(CompressParameterEnum.FL2_p_fastLength);
+            set => SetParameter(CompressParameterEnum.FL2_p_fastLength, (nuint)value);
+        }
+
+        public CompressionStream(Stream innerStream, uint nbThreads = 0, int outBufferSize = 64 * 1024 * 1024)
         {
             bufferSize = outBufferSize;
             _innerStream = innerStream;
             _context = NativeMethods.FL2_createCStreamMt(nbThreads, 1);
-            var code = NativeMethods.FL2_initCStream(_context, 1);
+            var code = NativeMethods.FL2_initCStream(_context, 0);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -51,14 +72,6 @@ namespace FastLZMA2Net
                 dst = outputBufferHandle.AddrOfPinnedObject(),
                 size = (nuint)outputBufferArray.Length,
                 pos = 0
-            };
-
-            dictBufferArray = new byte[bufferSize];
-            dictBufferHandle = GCHandle.Alloc(outputBufferArray, GCHandleType.Pinned);
-            dictBuffer = new FL2DictBuffer()
-            {
-                dst = outputBufferHandle.AddrOfPinnedObject(),
-                size = (nuint)outputBufferArray.Length
             };
         }
 
@@ -85,16 +98,15 @@ namespace FastLZMA2Net
         public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             Memory<byte> bufferMemory = buffer.AsMemory(offset, count);
-            await new ValueTask<int>(CompressCore(bufferMemory.Span, false, cancellationToken));
+            await new ValueTask<int>(CompressCore(bufferMemory.Span, false, cancellationToken)).ConfigureAwait(false);
             return;
         }
 
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            await new ValueTask<int>(CompressCore(buffer.Span, false, cancellationToken));
+            await new ValueTask<int>(CompressCore(buffer.Span, false, cancellationToken)).ConfigureAwait(false);
             return;
         }
-
 
         private unsafe int CompressCore(ReadOnlySpan<byte> buffer, bool Appending, CancellationToken cancellationToken = default)
         {
@@ -108,6 +120,8 @@ namespace FastLZMA2Net
                     pos = 0
                 };
                 nuint code;
+                
+                //push source data& receive part of compressed data 
                 do
                 {
                     outBuffer.pos = 0;
@@ -121,9 +135,14 @@ namespace FastLZMA2Net
                         }
                     }
                     _innerStream.Write(outputBufferArray, 0, (int)outBuffer.pos);
-
                 } while (!cancellationToken.IsCancellationRequested && (outBuffer.pos != 0));
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    NativeMethods.FL2_cancelCStream(_context);
+                    return 0;
+                }
 
+                // continue receive compressed data
                 do
                 {
                     outBuffer.pos = 0;
@@ -140,9 +159,14 @@ namespace FastLZMA2Net
                         }
                     }
                     _innerStream.Write(outputBufferArray, 0, (int)outBuffer.pos);
+                } while (!cancellationToken.IsCancellationRequested && outBuffer.pos != 0);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    NativeMethods.FL2_cancelCStream(_context);
+                    return 0;
+                }
 
-                } while (outBuffer.pos != 0);
-
+                // receive all remaining compressed data
                 do
                 {
                     outBuffer.pos = 0;
@@ -159,13 +183,17 @@ namespace FastLZMA2Net
                         }
                     }
                     _innerStream.Write(outputBufferArray, 0, (int)outBuffer.pos);
+                } while (!cancellationToken.IsCancellationRequested && outBuffer.pos != 0);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    NativeMethods.FL2_cancelCStream(_context);
+                    return 0;
+                }
 
-                } while (outBuffer.pos != 0);
-                //Write Last 5 byte checksum
+                //Write compress checksum
                 if (!Appending)
                 {
                     code = NativeMethods.FL2_endStream(_context, ref outBuffer);
-                    code = NativeMethods.FL2_remainingOutputSize(_context);
                     if (FL2Exception.IsError(code))
                     {
                         if (FL2Exception.IsError(code))
@@ -177,6 +205,12 @@ namespace FastLZMA2Net
                         }
                     }
                     _innerStream.Write(outputBufferArray, 0, (int)outBuffer.pos);
+                    //reset for next mission
+                    code = NativeMethods.FL2_initCStream(_context, 0);
+                    if (FL2Exception.IsError(code))
+                    {
+                        throw new FL2Exception(code);
+                    }
                 }
             }
             return 0;
@@ -189,16 +223,16 @@ namespace FastLZMA2Net
         public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 
         public override int Read(Span<byte> buffer) => throw new NotSupportedException();
+
         public override int ReadByte() => throw new NotSupportedException();
 
         public override void Close() => Dispose(true);
 
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
 
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
-
 
         public override void Flush()
         {
@@ -209,9 +243,14 @@ namespace FastLZMA2Net
                 {
                     throw new FL2Exception(code);
                 }
-
             }
             _innerStream.Write(outputBufferArray, 0, (int)outBuffer.pos);
+            //prepare for next mission
+            code = NativeMethods.FL2_initCStream(_context, 0);
+            if (FL2Exception.IsError(code))
+            {
+                throw new FL2Exception(code);
+            }
         }
 
         public nuint SetParameter(CompressParameterEnum param, nuint value)

@@ -7,12 +7,13 @@ namespace FastLZMA2Net
         private readonly string _filePath;
         private readonly MemoryMappedFile _mmFile;
         private readonly MemoryMappedViewAccessor _accessor;
-        
+
         private bool disposed;
 
         public byte* mmPtr;
         public readonly long Length;
         public readonly string FullName;
+
         public DirectFileAccessor(string path, FileMode mode, string? mapName, long capacity, MemoryMappedFileAccess access)
         {
             _filePath = path;

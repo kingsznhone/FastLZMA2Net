@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace FastLZMA2Net
+﻿namespace FastLZMA2Net
 {
     public struct FL2InBuffer
     {
@@ -8,6 +6,7 @@ namespace FastLZMA2Net
         public nuint size;
         public nuint pos;
     }
+
     public struct FL2OutBuffer
     {
         public nint dst;

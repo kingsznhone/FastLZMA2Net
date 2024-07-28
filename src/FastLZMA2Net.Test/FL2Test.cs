@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Reflection.Emit;
 using FastLZMA2Net;
 
 namespace Test
@@ -15,7 +13,7 @@ namespace Test
         [TestMethod]
         public void Simple()
         {
-            byte[] src = new byte[4096*1024];
+            byte[] src = new byte[4096 * 1024];
             new Random().NextBytes(src);
 
             byte[] compressed = FL2.Compress(src, 10);
@@ -29,10 +27,11 @@ namespace Test
             byte[] src = new byte[4096 * 1024];
             new Random().NextBytes(src);
 
-            byte[] compressed = FL2.CompressMT(src, 10,0);
+            byte[] compressed = FL2.CompressMT(src, 10, 0);
             byte[] decompressed = FL2.DecompressMT(compressed, 0);
             Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
         }
+
         [TestMethod]
         public void FindDecompressedSize()
         {

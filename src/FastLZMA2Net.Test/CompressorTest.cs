@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using FastLZMA2Net;
 
 namespace Test
@@ -16,31 +11,26 @@ namespace Test
         {
             Compressor compressorMT = new Compressor();
             Decompressor decompressorMT = new Decompressor(0);
-            for (int i = 0; i < 5; i++)
-            {
-                byte[] src = new byte[4096 * 1024];
-                new Random().NextBytes(src);
+            byte[] src = new byte[4096 * 1024];
+            new Random().NextBytes(src);
 
-                byte[] compressed = compressorMT.Compress(src, 10);
-                
-                byte prop = compressorMT.DictSizeProperty;
-                byte[] decompressed = decompressorMT.Decompress(compressed);
-                Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
-            }
+            byte[] compressed = compressorMT.Compress(src);
+
+            byte prop = compressorMT.DictSizeProperty;
+            byte[] decompressed = decompressorMT.Decompress(compressed);
+            Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
         }
-
 
         [TestMethod]
         public void CompressorST()
         {
             Compressor compressorST = new Compressor();
-                byte[] src = new byte[4096 * 1024];
-                new Random().NextBytes(src);
+            byte[] src = new byte[4096 * 1024];
+            new Random().NextBytes(src);
 
-                byte[] compressed = compressorST.Compress(src, 10);
-                byte[] decompressed = FL2.Decompress(compressed);
-                Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
-            
+            byte[] compressed = compressorST.Compress(src);
+            byte[] decompressed = FL2.Decompress(compressed);
+            Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
         }
 
         [TestMethod]
@@ -50,27 +40,27 @@ namespace Test
             Debug.WriteLine($"Thread Count: {compressorMT.ThreadCount}");
             Debug.WriteLine($"Dict Size Property: {compressorMT.DictSizeProperty}");
 
-                byte[] src = new byte[4096 * 1024];
-                new Random().NextBytes(src);
+            byte[] src = new byte[4096 * 1024];
+            new Random().NextBytes(src);
 
-                byte[] compressed = compressorMT.Compress(src, 10);
-                byte[] decompressed = FL2.Decompress(compressed);
+            byte[] compressed = compressorMT.Compress(src, 10);
+            byte[] decompressed = FL2.Decompress(compressed);
 
-                Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
-            
+            Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
         }
 
         [TestMethod]
         public void DirectCompress()
         {
             Compressor compressor = new Compressor();
-            nuint length =  compressor.Compress("Resources/dummy.raw", "Resources/dummy.test");
+            nuint length = compressor.Compress("Resources/dummy.raw", "Resources/dummy.test");
             byte[] compressed = File.ReadAllBytes("Resources/dummy.test");
             byte[] recovered = FL2.Decompress(compressed);
             byte[] origin = File.ReadAllBytes("Resources/dummy.raw");
             File.Delete("Resources/dummy.test");
             Assert.IsTrue(recovered.SequenceEqual(origin));
         }
+
         [TestMethod]
         public void SetDictSize()
         {
@@ -79,7 +69,7 @@ namespace Test
             compressorST.DictionarySize = FL2.DictSizeMax;
             var exception = Assert.ThrowsException<FL2Exception>(() =>
             {
-                compressorST.DictionarySize = FL2.DictSizeMin >> 1 ;
+                compressorST.DictionarySize = FL2.DictSizeMin >> 1;
             });
             Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.parameter_outOfBound);
             exception = Assert.ThrowsException<FL2Exception>(() =>
@@ -96,7 +86,6 @@ namespace Test
             for (int i = 1; i <= 10; i++)
             {
                 compressorST.CompressLevel = i;
-
             }
 
             var exception = Assert.ThrowsException<FL2Exception>(() =>
@@ -139,7 +128,6 @@ namespace Test
             byte[] compressed = FL2.Compress(src, 10);
             byte[] decompressed = decompressorMT.Decompress(compressed); ;
             Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
-
         }
     }
 }

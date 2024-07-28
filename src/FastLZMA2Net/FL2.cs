@@ -2,7 +2,7 @@
 
 namespace FastLZMA2Net
 {
-    public static partial class FL2
+    public static class FL2
     {
         #region Properties
 
@@ -76,14 +76,15 @@ namespace FastLZMA2Net
         /// </summary>
         /// <param name="src"></param>
         /// <returns></returns>
-        public static nuint FindCompressBound(byte[] src)
-        {
-            return NativeMethods.FL2_compressBound((nuint)src.Length);
-        }
-
+        ///
         public static nuint FindCompressBound(nuint streamSize)
         {
             return NativeMethods.FL2_compressBound(streamSize);
+        }
+
+        public static nuint FindCompressBound(byte[] src)
+        {
+            return NativeMethods.FL2_compressBound((nuint)src.Length);
         }
 
         /// <summary>

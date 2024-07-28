@@ -42,30 +42,32 @@ namespace FastLZMA2Net
             set => SetParameter(CompressParameterEnum.FL2_p_fastLength, (nuint)value);
         }
 
-        public Compressor()
+        public Compressor(uint nbThreads = 0, int compressLevel = 6)
         {
-            _context = NativeMethods.FL2_createCCtx();
-        }
-
-        public Compressor(uint nThread)
-        {
-            _context = NativeMethods.FL2_createCCtxMt(nThread);
+            if (nbThreads == 1)
+            {
+                _context = NativeMethods.FL2_createCCtx();
+            }
+            _context = NativeMethods.FL2_createCCtxMt(nbThreads);
+            CompressLevel = (int)compressLevel;
         }
 
         public Task<byte[]> CompressAsync(byte[] src)
         {
-            return Task.Run(() => Compress(src));
+            return CompressAsync(src, 0);
         }
-        public Task<byte[]> CompressAsync(byte[] src, int Level)
+
+        public Task<byte[]> CompressAsync(byte[] src, int compressLevel)
         {
-            return Task.Run(() => Compress(src,Level));
+            return Task.Run(() => Compress(src, compressLevel));
         }
+
         public byte[] Compress(byte[] src)
         {
             return Compress(src, 0);
         }
 
-        public byte[] Compress(byte[] src, int Level)
+        public byte[] Compress(byte[] src, int compressLevel)
         {
             if (src is null)
             {
@@ -73,7 +75,7 @@ namespace FastLZMA2Net
             }
 
             byte[] buffer = new byte[FL2.FindCompressBound(src)];
-            nuint code = NativeMethods.FL2_compressCCtx(_context, buffer, (nuint)buffer.Length, src, (nuint)src.Length, Level);
+            nuint code = NativeMethods.FL2_compressCCtx(_context, buffer, (nuint)buffer.Length, src, (nuint)src.Length, compressLevel);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -83,31 +85,39 @@ namespace FastLZMA2Net
 
         public unsafe nuint Compress(string srcPath, string dstPath)
         {
-            nuint bound;
+            nuint code;
             FileInfo sourceFile = new FileInfo(srcPath);
             FileInfo destFile = new FileInfo(dstPath);
+            if (sourceFile.Length >= 0x7FFFFFFF)
+            {
+                throw new ArgumentOutOfRangeException(nameof(srcPath), "File is too large");
+            }
+            if (destFile.Exists)
+            {
+                destFile.Delete();
+            }
             using (DirectFileAccessor accessorSrc = new DirectFileAccessor(sourceFile.FullName, FileMode.Open, null, sourceFile.Length, MemoryMappedFileAccess.ReadWrite))
             {
-                bound = NativeMethods.FL2_compressBound((nuint)sourceFile.Length);
-                if (FL2Exception.IsError(bound))
+                code = NativeMethods.FL2_compressBound((nuint)sourceFile.Length);
+                if (FL2Exception.IsError(code))
                 {
-                    throw new FL2Exception(bound);
+                    throw new FL2Exception(code);
                 }
                 using (DirectFileAccessor accessorDst = new DirectFileAccessor(destFile.FullName, FileMode.OpenOrCreate, null, sourceFile.Length, MemoryMappedFileAccess.ReadWrite))
                 {
-                    bound = NativeMethods.FL2_compressCCtx(_context, accessorDst.mmPtr, bound, accessorSrc.mmPtr, (nuint)sourceFile.Length, CompressLevel);
-                    if (FL2Exception.IsError(bound))
+                    code = NativeMethods.FL2_compressCCtx(_context, accessorDst.mmPtr, code, accessorSrc.mmPtr, (nuint)sourceFile.Length, CompressLevel);
+                    if (FL2Exception.IsError(code))
                     {
-                        throw new FL2Exception(bound);
+                        throw new FL2Exception(code);
                     }
                 }
             }
 
             using (var tmp = File.OpenWrite(destFile.FullName))
             {
-                tmp.SetLength((long)bound);
+                tmp.SetLength((long)code);
             }
-            return bound;
+            return code;
         }
 
         public nuint SetParameter(CompressParameterEnum param, nuint value)

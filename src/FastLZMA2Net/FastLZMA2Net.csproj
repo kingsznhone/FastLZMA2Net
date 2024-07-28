@@ -1,19 +1,56 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-	<Platforms>x64;x86;AnyCPU</Platforms>
-	<VersionPrefix>0.2.0</VersionPrefix>
-	  <VersionSuffix>alpha</VersionSuffix>
-	<Version>$(VersionPrefix)-$(VersionSuffix)</Version>
-	<PackageId>FastLZMA2Net</PackageId>
-  </PropertyGroup>
-	
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Platforms>x64;x86;AnyCPU</Platforms>
+		<VersionPrefix>0.3.0</VersionPrefix>
+		<VersionSuffix>alpha</VersionSuffix>
+		<Version>$(VersionPrefix)-$(VersionSuffix)</Version>
+		<PackageId>FastLZMA2Net</PackageId>
+		<SignAssembly>False</SignAssembly>
+		<Title>FastLZMA2Net</Title>
+		<Authors>KingsZNHONE</Authors>
+		<Copyright>Copyright © KingsZNHONE 2024-present</Copyright>
+		<PackageTags>fast lzma2 compression</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/kingsznhone/FastLZMA2Net</RepositoryUrl>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<AnalysisLevel>latest-all</AnalysisLevel>
+		<PackageIcon>logo.png</PackageIcon>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+		<IsTrimmable>True</IsTrimmable>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+		<IsTrimmable>True</IsTrimmable>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<IsTrimmable>True</IsTrimmable>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+		<IsTrimmable>True</IsTrimmable>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+		<IsTrimmable>True</IsTrimmable>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<IsTrimmable>True</IsTrimmable>
+	</PropertyGroup>
+
 	<ItemGroup Condition="'$(Platform)' == 'AnyCPU'">
 		<None Include="build\x64\fast-lzma2.dll">
 			<Link>x64\%(FileName)%(Extension)</Link>
@@ -24,8 +61,16 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
-	
+
 	<ItemGroup>
+		<None Include="..\..\LICENSE">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
 		<None Include="build\x64\fast-lzma2.dll" Condition="'$(Platform)' == 'x64'">
 			<Link>%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -35,9 +80,17 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
-	
+
 	<ItemGroup>
 		<None Include="build\**\*" Pack="true" PackagePath="build\" />
 		<None Include="build\LICENSE-fast-lzma2" Pack="true" PackagePath="lib\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="Resources\logo.png">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 </Project>

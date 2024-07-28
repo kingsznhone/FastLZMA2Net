@@ -178,7 +178,7 @@ Introduction
 
     FL2LIB_API unsigned FL2LIB_CALL FL2_getDCtxThreadCount(const FL2_DCtx* dctx);
 
-    /*! FL2_initDCtx() :
+    /*! FL2_initDCtx():
      *  Use only when a property byte is not present at input byte 0. No init is necessary otherwise.
      *  The caller must store the result from FL2_getCCtxDictProp() and pass it to this function. */
     FL2LIB_API size_t FL2LIB_CALL FL2_initDCtx(FL2_DCtx* dctx, unsigned char prop);
