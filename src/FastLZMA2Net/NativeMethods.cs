@@ -99,6 +99,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_compressMt([In]byte[] dst, nuint dstCapacity,[In] byte[] src, nuint srcSize, int compressionLevel, uint nbThreads);
 
         /// <summary>
@@ -118,6 +119,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_decompress([In]byte[] dst, nuint dstCapacity,[In] byte[] src, nuint compressedSize);
 
         /// <summary>
@@ -139,6 +141,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_decompressMt([In] byte[] dst, nuint dstCapacity, [In] byte[] src, nuint compressedSize, uint nbThreads);
 
         #endregion Simple Function
@@ -157,6 +160,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_findDecompressedSize([In] byte[] src, nuint srcSize);
 
         /// <summary>
@@ -171,6 +175,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_findDecompressedSize(byte* src, nuint srcSize);
 
         /// <summary>
@@ -182,6 +187,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_getDictSizeFromProp(byte prop);
 
         /// <summary>
@@ -192,6 +198,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_compressBound(nuint srcSize);
 
         /// <summary>
@@ -202,6 +209,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.I4)]
         internal static partial int FL2_maxCLevel();
 
         /// <summary>
@@ -212,6 +220,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.I4)]
         internal static partial int FL2_maxHighCLevel();
 
         /// <summary>
@@ -227,6 +236,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_getLevelParameters(int compressionLevel, int high, ref CompressionParameters parameters);
 
 
@@ -246,6 +256,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_estimateCCtxSize(int compressionLevel, uint nbThreads);
 
         /// <summary>
@@ -257,6 +268,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_estimateCCtxSize_byParams(ref CompressionParameters parameters, uint nbThreads);
 
         /// <summary>
@@ -267,6 +279,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_estimateCCtxSize_usingCCtx(IntPtr context);
 
         /// <summary>
@@ -277,6 +290,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_estimateDCtxSize(uint nbThreads);
 
         #endregion Helper Functions
@@ -292,21 +306,25 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysInt)]
         internal static partial nint FL2_createCCtx();
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysInt)]
         internal static partial nint FL2_createCCtxMt(uint nbThreads);
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysInt)]
         internal static partial nint FL2_freeCCtx(nint context);
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.U4)]
         internal static partial uint FL2_getCCtxThreadCount(nint context);
 
         /// <summary>
@@ -322,6 +340,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_compressCCtx(nint context,
                                                       [In] byte[] dst, nuint dstCapacity,
                                                       [In] byte[] src, nuint srcSize,
@@ -340,6 +359,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_compressCCtx(nint context,
                                               byte* dst, nuint dstCapacity,
                                               byte* src, nuint srcSize,
@@ -353,6 +373,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.U1)]
         internal static partial byte FL2_getCCtxDictProp(nint context);
 
         /// <summary>
@@ -367,6 +388,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_CCtx_setParameter(nint context, FL2Parameter param, nuint value);
 
         /// <summary>
@@ -380,6 +402,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_CCtx_getParameter(nint context, FL2Parameter param);
 
         #endregion Compress Context
@@ -400,21 +423,25 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysInt)]
         internal static partial nint FL2_createDCtx();
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysInt)]
         internal static partial nint FL2_createDCtxMt(uint nbThreads);
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysInt)]
         internal static partial nint FL2_freeDCtx(nint context);
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.U4)]
         internal static partial uint FL2_getDCtxThreadCount(nint context);
 
         /// <summary>
@@ -426,6 +453,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_initDCtx(nint context, byte prop);
 
         /// <summary>
@@ -440,6 +468,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_decompressDCtx(nint context,
                                                         [In] byte[] dst, nuint dstCapacity,
                                                         [In] byte[] src, nuint srcSize);
@@ -456,6 +485,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_decompressDCtx(nint context,
                                                 byte* dst, nuint dstCapacity,
                                                 byte* src, nuint srcSize);
@@ -501,11 +531,13 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysInt)]
         internal static partial nint FL2_createCStream();
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysInt)]
         internal static partial nint FL2_createCStreamMt(uint nbThreads, int dualBuffer);
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
@@ -524,6 +556,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_initCStream(nint fcs, int compressionLevel);
 
         /// <summary>
@@ -540,6 +573,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_setCStreamTimeout(nint fcs, uint timeout);
 
         /// <summary>
@@ -555,6 +589,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_compressStream(nint fcs, ref FL2OutBuffer output, ref FL2InBuffer input);
 
         /// <summary>
@@ -567,6 +602,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_copyCStreamOutput(nint fcs, ref FL2OutBuffer output);
 
         /// <summary>
@@ -579,6 +615,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_getDictionaryBuffer(nint fcs, ref FL2DictBuffer dict);
 
         /// <summary>
@@ -590,6 +627,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_updateDictionary(nint fcs, nuint addedSize);
 
         /// <summary>
@@ -604,6 +642,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_getNextCompressedBuffer(nint fcs, ref FL2cBuffer cbuf);
         /// <summary>
         /// Returns the number of bytes processed since the stream was initialized. 
@@ -616,6 +655,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_getCStreamProgress(nint fcs, ulong outputSize);
 
         /// <summary>
@@ -628,6 +668,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_waitCStream(nint fcs);
 
         /// <summary>
@@ -648,6 +689,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_remainingOutputSize(nint fcs);
 
         /// <summary>
@@ -661,6 +703,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_flushStream(nint fcs, ref FL2OutBuffer output);
 
         /// <summary>
@@ -674,6 +717,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_endStream(nint fcs, ref FL2OutBuffer output);
 
         /// <summary>
@@ -688,6 +732,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_CStream_setParameter(nint fcs, FL2Parameter param, nuint value);
 
         /// <summary>
@@ -701,6 +746,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_CStream_getParameter(nint fcs, FL2Parameter param);
         /// <summary>
         /// memory usage determined by level
@@ -712,6 +758,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_estimateCStreamSize(int compressionLevel, uint nbThreads, int dualBuffer);
         /// <summary>
         /// memory usage determined by params
@@ -723,6 +770,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_estimateCStreamSize_byParams(ref CompressionParameters parameters, uint nbThreads, int dualBuffer);
 
         /// <summary>
@@ -733,6 +781,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_estimateCStreamSize_usingCStream(nint fcs);
 
         #endregion Compress Stream
@@ -760,16 +809,19 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysInt)]
         internal static partial nint FL2_createDStream();
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysInt)]
         internal static partial nint FL2_createDStreamMt(uint nbThreads);
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_freeDStream(nint fds);
 
         /// <summary>
@@ -798,6 +850,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_setDStreamTimeout(nint fds, uint timeout);
 
         /// <summary>
@@ -810,6 +863,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_waitDStream(nint fds);
 
         /// <summary>
@@ -831,6 +885,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.U8)]
         internal static partial ulong FL2_getDStreamProgress(nint fds);
 
         /// <summary>
@@ -843,11 +898,13 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_initDStream(nint fds);
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_initDStream_withProp(nint fds, byte prop);
 
         /// <summary>
@@ -863,6 +920,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_decompressStream(nint fds, ref FL2OutBuffer output, ref FL2InBuffer input);
 
         /// <summary>
@@ -876,6 +934,7 @@ namespace FastLZMA2Net
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_estimateDStreamSize(nuint dictSize, uint nbThreads);
 
         #endregion Decompress Stream
