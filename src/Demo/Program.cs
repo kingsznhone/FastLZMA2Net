@@ -10,7 +10,6 @@ namespace Demo
             string SourceFilePath = @"D:\dummy.tar";
             string CompressedFilePath = @"D:\dummy.tar.fl2";
             string DecompressedFilePath = @"D:\dummy.recovery.tar";
-
             // Simple compression
             byte[] origin = File.ReadAllBytes(SourceFilePath);
             byte[] compressed = FL2.Compress(origin,0);
@@ -34,7 +33,7 @@ namespace Demo
             // small file or data (<2GB)
             using (MemoryStream ms = new MemoryStream())
             {
-                using (CompressionStream cs = new CompressionStream(ms))
+                using (CompressStream cs = new CompressStream(ms))
                 {
                     cs.Write(origin);
                 }
@@ -44,7 +43,7 @@ namespace Demo
             //large file streaming compression using Direct file access(>2GB)
             using (FileStream compressedFile = File.OpenWrite(CompressedFilePath))
             {
-                using (CompressionStream cs = new CompressionStream(compressedFile))
+                using (CompressStream cs = new CompressStream(compressedFile))
                 {
                     using (FileStream sourceFile = File.OpenRead(SourceFilePath))
                     {
@@ -71,7 +70,7 @@ namespace Demo
             {
                 using (FileStream compressedFile = File.OpenRead(CompressedFilePath))
                 {
-                    using (DecompressionStream ds = new DecompressionStream(compressedFile))
+                    using (DecompressStream ds = new DecompressStream(compressedFile))
                     {
                         ds.CopyTo(recoveryStream);
                     }

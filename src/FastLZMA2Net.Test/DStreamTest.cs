@@ -22,7 +22,7 @@ namespace Test
             {
                 using (MemoryStream ms = new MemoryStream(compressed))
                 {
-                    using (DecompressionStream ds = new DecompressionStream(ms, nbThreads: 0, inBufferSize: 1024))
+                    using (DecompressStream ds = new DecompressStream(ms, nbThreads: 0, inBufferSize: 1024))
                     {
                         int reads = 0;
                         while ((reads = ds.Read(buffer, 0, buffer.Length)) != 0)
@@ -49,7 +49,7 @@ namespace Test
             {
                 using (MemoryStream ms = new MemoryStream(compressed))
                 {
-                    using (DecompressionStream ds = new DecompressionStream(ms, nbThreads: 0, inBufferSize: 256))
+                    using (DecompressStream ds = new DecompressStream(ms, nbThreads: 0, inBufferSize: 256))
                     {
                         int reads = 0;
                         while ((reads = await ds.ReadAsync(buffer, 0, buffer.Length)) != 0)
@@ -74,7 +74,7 @@ namespace Test
             {
                 using (MemoryStream ms = new MemoryStream(compressed))
                 {
-                    using (DecompressionStream ds = new DecompressionStream(ms, nbThreads: 0, inBufferSize: 1024))
+                    using (DecompressStream ds = new DecompressStream(ms, nbThreads: 0, inBufferSize: 1024))
                     {
                         ds.CopyTo(recoveryStream);
                     }
@@ -98,7 +98,7 @@ namespace Test
             {
                 using (FileStream fs = new FileStream(@"Resources/dummy.fl2", FileMode.Open, FileAccess.Read))
                 {
-                    using (DecompressionStream ds = new DecompressionStream(fs, nbThreads: 0))
+                    using (DecompressStream ds = new DecompressStream(fs, nbThreads: 0))
                     {
                         ds.CopyTo(recoveryStream);
                     }
@@ -112,7 +112,7 @@ namespace Test
             {
                 using (FileStream fs = new FileStream(@"Resources/dummy.fl2", FileMode.Open, FileAccess.Read))
                 {
-                    using (DecompressionStream ds = new DecompressionStream(fs, nbThreads: 0))
+                    using (DecompressStream ds = new DecompressStream(fs, nbThreads: 0))
                     {
                         ds.CopyTo(recoveryStream);
                     }

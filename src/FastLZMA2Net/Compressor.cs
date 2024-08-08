@@ -5,50 +5,53 @@ namespace FastLZMA2Net
     //FL2CompressContext
     public partial class Compressor : IDisposable
     {
-        private readonly nint _context;
+        private readonly nint _CContext;
         private bool disposed = false;
         private bool disposedValue;
 
-        public uint ThreadCount => NativeMethods.FL2_getCCtxThreadCount(_context);
-        public byte DictSizeProperty => NativeMethods.FL2_getCCtxDictProp(_context);
+        public uint ThreadCount => NativeMethods.FL2_getCCtxThreadCount(_CContext);
+        public byte DictSizeProperty => NativeMethods.FL2_getCCtxDictProp(_CContext);
 
         public int CompressLevel
         {
-            get => (int)GetParameter(CompressParameterEnum.FL2_p_compressionLevel);
-            set => SetParameter(CompressParameterEnum.FL2_p_compressionLevel, (nuint)value);
+            get => (int)GetParameter(FL2Parameter.CompressionLevel);
+            set => SetParameter(FL2Parameter.CompressionLevel, (nuint)value);
         }
 
         public int HighCompressLevel
         {
-            get => (int)GetParameter(CompressParameterEnum.FL2_p_highCompression);
-            set => SetParameter(CompressParameterEnum.FL2_p_highCompression, (nuint)value);
+            get => (int)GetParameter(FL2Parameter.HighCompression);
+            set => SetParameter(FL2Parameter.HighCompression, (nuint)value);
         }
 
         public int DictionarySize
         {
-            get => (int)GetParameter(CompressParameterEnum.FL2_p_dictionarySize);
-            set => SetParameter(CompressParameterEnum.FL2_p_dictionarySize, (nuint)value);
+            get => (int)GetParameter(FL2Parameter.DictionarySize);
+            set => SetParameter(FL2Parameter.DictionarySize, (nuint)value);
         }
 
         public int SearchDepth
         {
-            get => (int)GetParameter(CompressParameterEnum.FL2_p_searchDepth);
-            set => SetParameter(CompressParameterEnum.FL2_p_searchDepth, (nuint)value);
+            get => (int)GetParameter(FL2Parameter.SearchDepth);
+            set => SetParameter(FL2Parameter.SearchDepth, (nuint)value);
         }
 
         public int FastLength
         {
-            get => (int)GetParameter(CompressParameterEnum.FL2_p_fastLength);
-            set => SetParameter(CompressParameterEnum.FL2_p_fastLength, (nuint)value);
+            get => (int)GetParameter(FL2Parameter.FastLength);
+            set => SetParameter(FL2Parameter.FastLength, (nuint)value);
         }
 
         public Compressor(uint nbThreads = 0, int compressLevel = 6)
         {
             if (nbThreads == 1)
             {
-                _context = NativeMethods.FL2_createCCtx();
+                _CContext = NativeMethods.FL2_createCCtx();
             }
-            _context = NativeMethods.FL2_createCCtxMt(nbThreads);
+            else
+            {
+                _CContext = NativeMethods.FL2_createCCtxMt(nbThreads);
+            }
             CompressLevel = (int)compressLevel;
         }
 
@@ -75,7 +78,7 @@ namespace FastLZMA2Net
             }
 
             byte[] buffer = new byte[FL2.FindCompressBound(src)];
-            nuint code = NativeMethods.FL2_compressCCtx(_context, buffer, (nuint)buffer.Length, src, (nuint)src.Length, compressLevel);
+            nuint code = NativeMethods.FL2_compressCCtx(_CContext, buffer, (nuint)buffer.Length, src, (nuint)src.Length, compressLevel);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -105,7 +108,7 @@ namespace FastLZMA2Net
                 }
                 using (DirectFileAccessor accessorDst = new DirectFileAccessor(destFile.FullName, FileMode.OpenOrCreate, null, sourceFile.Length, MemoryMappedFileAccess.ReadWrite))
                 {
-                    code = NativeMethods.FL2_compressCCtx(_context, accessorDst.mmPtr, code, accessorSrc.mmPtr, (nuint)sourceFile.Length, CompressLevel);
+                    code = NativeMethods.FL2_compressCCtx(_CContext, accessorDst.mmPtr, code, accessorSrc.mmPtr, (nuint)sourceFile.Length, CompressLevel);
                     if (FL2Exception.IsError(code))
                     {
                         throw new FL2Exception(code);
@@ -120,9 +123,9 @@ namespace FastLZMA2Net
             return code;
         }
 
-        public nuint SetParameter(CompressParameterEnum param, nuint value)
+        public nuint SetParameter(FL2Parameter param, nuint value)
         {
-            nuint code = NativeMethods.FL2_CCtx_setParameter(_context, param, value);
+            nuint code = NativeMethods.FL2_CCtx_setParameter(_CContext, param, value);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -130,9 +133,9 @@ namespace FastLZMA2Net
             return code;
         }
 
-        public nuint GetParameter(CompressParameterEnum param)
+        public nuint GetParameter(FL2Parameter param)
         {
-            var code = NativeMethods.FL2_CCtx_getParameter(_context, param);
+            var code = NativeMethods.FL2_CCtx_getParameter(_CContext, param);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -145,7 +148,7 @@ namespace FastLZMA2Net
             if (!disposedValue)
             {
                 if (disposing) { }
-                NativeMethods.FL2_freeCCtx(_context);
+                NativeMethods.FL2_freeCCtx(_CContext);
                 disposedValue = true;
             }
         }

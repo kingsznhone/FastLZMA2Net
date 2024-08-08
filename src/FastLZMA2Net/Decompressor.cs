@@ -13,7 +13,10 @@
             {
                 _DContext = NativeMethods.FL2_createDCtx();
             }
-            _DContext = NativeMethods.FL2_createDCtxMt(nbThreads);
+            else
+            {
+                _DContext = NativeMethods.FL2_createDCtxMt(nbThreads);
+            }
         }
 
         public void Init(byte prop)

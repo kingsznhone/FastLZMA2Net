@@ -55,12 +55,12 @@ namespace Test
             {
                 parameters = FL2.GetPresetLevelParameters(-1, 0);
             });
-            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.parameter_outOfBound);
+            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.ParameterOutOfBound);
             exception = Assert.ThrowsException<FL2Exception>(() =>
             {
                 parameters = FL2.GetPresetLevelParameters(11, 0);
             });
-            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.parameter_outOfBound);
+            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.ParameterOutOfBound);
             Console.WriteLine($"Max Level{FL2.CompressionLevelMax}");
             Console.WriteLine($"Max High Level{FL2.HighCompressionLevelMax}");
         }

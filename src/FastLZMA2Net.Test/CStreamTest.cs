@@ -19,7 +19,7 @@ namespace Test
 
             using (MemoryStream resultStream = new MemoryStream())
             {
-                using (CompressionStream ds = new CompressionStream(resultStream))
+                using (CompressStream ds = new CompressStream(resultStream))
                 {
                     int offset = 0;
                     while (offset < origin.Length)
@@ -45,7 +45,7 @@ namespace Test
 
             using (MemoryStream resultStream = new MemoryStream())
             {
-                using (CompressionStream ds = new CompressionStream(resultStream))
+                using (CompressStream ds = new CompressStream(resultStream))
                 {
                     ds.Write(origin);
                 }
@@ -63,7 +63,7 @@ namespace Test
 
             using (MemoryStream resultStream = new MemoryStream())
             {
-                using (CompressionStream ds = new CompressionStream(resultStream))
+                using (CompressStream ds = new CompressStream(resultStream))
                 {
                     await ds.WriteAsync(origin);
                 }
@@ -79,7 +79,7 @@ namespace Test
             byte[] buffer = new byte[1024];
             using FileStream sourceFile = File.OpenRead(@"Resources/dummy.raw");
             using FileStream compressedFile = File.OpenWrite(@"Resources/dummy.fl2");
-            using (CompressionStream cs = new CompressionStream(compressedFile, outBufferSize: 1024, nbThreads: 0))
+            using (CompressStream cs = new CompressStream(compressedFile, outBufferSize: 1024, nbThreads: 0))
             {
                 long offset = 0;
                 while (offset < sourceFile.Length)

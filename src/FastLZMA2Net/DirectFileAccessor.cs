@@ -7,7 +7,6 @@ namespace FastLZMA2Net
         private readonly string _filePath;
         private readonly MemoryMappedFile _mmFile;
         private readonly MemoryMappedViewAccessor _accessor;
-
         private bool disposed;
 
         public byte* mmPtr;

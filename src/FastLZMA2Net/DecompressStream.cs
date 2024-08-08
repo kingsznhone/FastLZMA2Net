@@ -2,13 +2,13 @@
 
 namespace FastLZMA2Net
 {
-    public class DecompressionStream : Stream, IDisposable
+    public class DecompressStream : Stream, IDisposable
     {
         private readonly int bufferSize = 16 * 1024 * 1024;
         private byte[] inputBufferArray;
         private GCHandle inputBufferHandle;
         private FL2InBuffer inBuffer;
-        private bool disposed = false;
+        private bool disposed;
         private readonly Stream _innerStream;
         private readonly nint _context;
         public override bool CanRead => _innerStream != null && _innerStream.CanRead;
@@ -22,7 +22,7 @@ namespace FastLZMA2Net
             set => throw new NotSupportedException();
         }
 
-        public DecompressionStream(Stream innerStream, uint nbThreads = 0, int inBufferSize = 16 * 1024 * 1024)
+        public DecompressStream(Stream innerStream, uint nbThreads = 0, int inBufferSize = 16 * 1024 * 1024)
         {
             bufferSize = inBufferSize;
             _innerStream = innerStream;
@@ -118,7 +118,7 @@ namespace FastLZMA2Net
                     code = NativeMethods.FL2_decompressStream(_context, ref outBuffer, ref inBuffer);
                     if (FL2Exception.IsError(code))
                     {
-                        if (FL2Exception.GetErrorCode(code) != FL2ErrorCode.buffer)
+                        if (FL2Exception.GetErrorCode(code) != FL2ErrorCode.Buffer)
                         {
                             throw new FL2Exception(code);
                         }
@@ -178,7 +178,7 @@ namespace FastLZMA2Net
             }
         }
 
-        ~DecompressionStream()
+        ~DecompressStream()
         {
             Dispose(disposing: false);
         }
