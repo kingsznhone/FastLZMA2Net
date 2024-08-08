@@ -2,29 +2,6 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Security.Cryptography;
-using System.Threading;
-using System.Dynamic;
-using System.IO;
-using System.Collections.Generic;
-using System.Reflection.Metadata;
-using System.Threading.Channels;
-using System;
-using System.Runtime.Intrinsics.X86;
-using Microsoft.VisualBasic;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Net.WebRequestMethods;
-using System.Collections;
-using System.ComponentModel;
-using System.Data.Common;
-using System.Drawing;
-using System.Text;
-using System.Timers;
-using System.Reflection.Emit;
-using System.Runtime.InteropServices.JavaScript;
-using System.Runtime.Intrinsics.Arm;
-using System.Numerics;
 
 namespace FastLZMA2Net
 {
@@ -69,6 +46,7 @@ namespace FastLZMA2Net
         private const string LibraryName = "fast-lzma2";
 
         #region Simple Function
+
         /// <summary>
         /// Compresses `src` content as a single LZMA2 compressed stream into already allocated `dst`.
         /// Call FL2_compressMt() to use > 1 thread.Specify nbThreads = 0 to use all cores.
@@ -83,7 +61,7 @@ namespace FastLZMA2Net
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         [return: MarshalAs(UnmanagedType.SysUInt)]
-        internal static partial nuint FL2_compress([In] byte[] dst, nuint dstCapacity,[In] byte[] src, nuint srcSize, int compressionLevel);
+        internal static partial nuint FL2_compress([In] byte[] dst, nuint dstCapacity, [In] byte[] src, nuint srcSize, int compressionLevel);
 
         /// <summary>
         /// Compresses `src` content as a single LZMA2 compressed stream into already allocated `dst`.
@@ -100,15 +78,15 @@ namespace FastLZMA2Net
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         [return: MarshalAs(UnmanagedType.SysUInt)]
-        internal static partial nuint FL2_compressMt([In]byte[] dst, nuint dstCapacity,[In] byte[] src, nuint srcSize, int compressionLevel, uint nbThreads);
+        internal static partial nuint FL2_compressMt([In] byte[] dst, nuint dstCapacity, [In] byte[] src, nuint srcSize, int compressionLevel, uint nbThreads);
 
         /// <summary>
         /// Decompresses a single LZMA2 compressed stream from `src` into already allocated `dst`.
         /// `compressedSize` : must be at least the size of the LZMA2 stream.
         /// `dstCapacity` is the original, uncompressed size to regenerate, returned by calling FL2_findDecompressedSize().
-        /// Call FL2_decompressMt() to use > 1 thread. Specify nbThreads = 0 to use all cores. 
+        /// Call FL2_decompressMt() to use > 1 thread. Specify nbThreads = 0 to use all cores.
         /// The stream must contain dictionary resets to use multiple threads.
-        /// These are inserted during compression by default. 
+        /// These are inserted during compression by default.
         /// The frequency can be changed/disabled with the FL2_p_resetInterval parameter setting.
         /// </summary>
         /// <param name="dst"></param>
@@ -120,13 +98,13 @@ namespace FastLZMA2Net
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         [return: MarshalAs(UnmanagedType.SysUInt)]
-        internal static partial nuint FL2_decompress([In]byte[] dst, nuint dstCapacity,[In] byte[] src, nuint compressedSize);
+        internal static partial nuint FL2_decompress([In] byte[] dst, nuint dstCapacity, [In] byte[] src, nuint compressedSize);
 
         /// <summary>
         /// Decompresses a single LZMA2 compressed stream from `src` into already allocated `dst`.
         /// `compressedSize` : must be at least the size of the LZMA2 stream.
         /// `dstCapacity` is the original, uncompressed size to regenerate, returned by calling FL2_findDecompressedSize().
-        /// Call FL2_decompressMt() to use > 1 thread. Specify nbThreads = 0 to use all cores. 
+        /// Call FL2_decompressMt() to use > 1 thread. Specify nbThreads = 0 to use all cores.
         /// The stream must contain dictionary resets to use multiple threads.These are inserted during compression by  default.
         /// The frequency can be changed/disabled with the FL2_p_resetInterval parameter setting.
         /// </summary>
@@ -239,13 +217,12 @@ namespace FastLZMA2Net
         [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_getLevelParameters(int compressionLevel, int high, ref CompressionParameters parameters);
 
-
         // FL2_estimate*() :
         // These functions estimate memory usage of a CCtx before its creation or before any operation has begun.
         // FL2_estimateCCtxSize() will provide a budget large enough for any compression level up to selected one.
         // To use FL2_estimateCCtxSize_usingCCtx, set the compression level and any other settings for the context,
         // then call the function. Some allocation occurs when the context is created, but the large memory buffers
-        // used for string matching are allocated only when compression is initialized. 
+        // used for string matching are allocated only when compression is initialized.
 
         /// <summary>
         /// memory usage determined by level
@@ -296,12 +273,13 @@ namespace FastLZMA2Net
         #endregion Helper Functions
 
         #region Compress Context
+
         // Compression context
         // When compressing many times, it is recommended to allocate a context just once,
         //  and re-use it for each successive compression operation. This will make workload
         //  friendlier for system's memory. The context may not use the number of threads requested
         //  if the library is compiled for single-threaded compression or nbThreads > FL2_MAXTHREADS.
-        //  Call FL2_getCCtxThreadCount to obtain the actual number allocated. 
+        //  Call FL2_getCCtxThreadCount to obtain the actual number allocated.
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -408,6 +386,7 @@ namespace FastLZMA2Net
         #endregion Compress Context
 
         #region Decompress Context
+
         // Decompression context
         //  When decompressing many times, it is recommended to allocate a context only once,
         //  and re-use it for each successive decompression operation. This will make the workload
@@ -417,9 +396,8 @@ namespace FastLZMA2Net
         //  Call FL2_getDCtxThreadCount to obtain the actual number allocated.
         //  At least nbThreads dictionary resets must exist in the stream to use all of the
         //  threads. Dictionary resets are inserted into the stream according to the
-        //  FL2_p_resetInterval parameter used in the compression context. 
+        //  FL2_p_resetInterval parameter used in the compression context.
 
-        
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
@@ -457,7 +435,7 @@ namespace FastLZMA2Net
         internal static partial nuint FL2_initDCtx(nint context, byte prop);
 
         /// <summary>
-        /// Same as FL2_decompress(), requires an allocated FL2_DCtx (see FL2_createDCtx()) 
+        /// Same as FL2_decompress(), requires an allocated FL2_DCtx (see FL2_createDCtx())
         /// </summary>
         /// <param name="context"></param>
         /// <param name="dst"></param>
@@ -474,7 +452,7 @@ namespace FastLZMA2Net
                                                         [In] byte[] src, nuint srcSize);
 
         /// <summary>
-        /// Same as FL2_decompress(), requires an allocated FL2_DCtx (see FL2_createDCtx()) 
+        /// Same as FL2_decompress(), requires an allocated FL2_DCtx (see FL2_createDCtx())
         /// </summary>
         /// <param name="context"></param>
         /// <param name="dst"></param>
@@ -493,40 +471,40 @@ namespace FastLZMA2Net
         #endregion Decompress Context
 
         #region Compress Stream
-        //  Streaming compression
-     //
-     //  A FL2_CStream object is required to track streaming operation.
-     //  Use FL2_createCStream() and FL2_freeCStream() to create/release resources.
-     //  FL2_CStream objects can be reused multiple times on consecutive compression operations.
-     // It is recommended to re-use FL2_CStream in situations where many streaming operations will be done
-     //  consecutively, since it will reduce allocation and initialization time.
-     //
-     //  Call FL2_createCStreamMt() with a nonzero dualBuffer parameter to use two input dictionary buffers.
-     //  The stream will not block on FL2_compressStream() and continues to accept data while compression is
-     //  underway, until both buffers are full.Useful when I/O is slow.
-     // To compress with a single thread with dual buffering, call FL2_createCStreamMt with nbThreads = 1.
-     //
-     //Use FL2_initCStream() on the FL2_CStream object to start a new compression operation.
-     //
-     //  Use FL2_compressStream() repetitively to consume input stream.
-     //  The function will automatically update the `pos` field.
-     // It will always consume the entire input unless an error occurs or the dictionary buffer is filled,
-     // unlike the decompression function.
-     //
-     // The radix match finder allows compressed data to be stored in its match table during encoding.
-     // Applications may call streaming compression functions with output == NULL.In this case,
-     // when the function returns 1, the compressed data must be read from the internal buffers.
-     // Call FL2_getNextCompressedBuffer() repeatedly until it returns 0.
-     //  Each call returns buffer information in the FL2_inBuffer parameter.Applications typically will
-     // passed this to an I/O write function or downstream filter.
-     //  Alternately, applications may pass an FL2_outBuffer object pointer to receive the output. In this
-     //  case the return value is 1 if the buffer is full and more compressed data remains.
-     //
-     //  FL2_endStream() instructs to finish a stream. It will perform a flush and write the LZMA2
-     // termination byte (required). Call FL2_endStream() repeatedly until it returns 0.
-     //
-     //  Most functions may return a size_t error code, which can be tested using FL2_isError().
 
+        //  Streaming compression
+        //
+        //  A FL2_CStream object is required to track streaming operation.
+        //  Use FL2_createCStream() and FL2_freeCStream() to create/release resources.
+        //  FL2_CStream objects can be reused multiple times on consecutive compression operations.
+        // It is recommended to re-use FL2_CStream in situations where many streaming operations will be done
+        //  consecutively, since it will reduce allocation and initialization time.
+        //
+        //  Call FL2_createCStreamMt() with a nonzero dualBuffer parameter to use two input dictionary buffers.
+        //  The stream will not block on FL2_compressStream() and continues to accept data while compression is
+        //  underway, until both buffers are full.Useful when I/O is slow.
+        // To compress with a single thread with dual buffering, call FL2_createCStreamMt with nbThreads = 1.
+        //
+        //Use FL2_initCStream() on the FL2_CStream object to start a new compression operation.
+        //
+        //  Use FL2_compressStream() repetitively to consume input stream.
+        //  The function will automatically update the `pos` field.
+        // It will always consume the entire input unless an error occurs or the dictionary buffer is filled,
+        // unlike the decompression function.
+        //
+        // The radix match finder allows compressed data to be stored in its match table during encoding.
+        // Applications may call streaming compression functions with output == NULL.In this case,
+        // when the function returns 1, the compressed data must be read from the internal buffers.
+        // Call FL2_getNextCompressedBuffer() repeatedly until it returns 0.
+        //  Each call returns buffer information in the FL2_inBuffer parameter.Applications typically will
+        // passed this to an I/O write function or downstream filter.
+        //  Alternately, applications may pass an FL2_outBuffer object pointer to receive the output. In this
+        //  case the return value is 1 if the buffer is full and more compressed data remains.
+        //
+        //  FL2_endStream() instructs to finish a stream. It will perform a flush and write the LZMA2
+        // termination byte (required). Call FL2_endStream() repeatedly until it returns 0.
+        //
+        //  Most functions may return a size_t error code, which can be tested using FL2_isError().
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -546,7 +524,7 @@ namespace FastLZMA2Net
         internal static partial void FL2_freeCStream(nint fcs);
 
         /// <summary>
-        /// Call this function before beginning a new compressed data stream. 
+        /// Call this function before beginning a new compressed data stream.
         /// To keep the stream object's  current parameters, specify zero for the compression level.
         /// The object is set to the default level upon creation.
         /// </summary>
@@ -560,8 +538,8 @@ namespace FastLZMA2Net
         internal static partial nuint FL2_initCStream(nint fcs, int compressionLevel);
 
         /// <summary>
-        /// Sets a timeout in milliseconds. Zero disables the timeout (default). 
-        /// If a nonzero timout is set, functions FL2_compressStream(), FL2_getDictionaryBuffer(), FL2_updateDictionary(), FL2_getNextCompressedBuffer(),
+        /// Sets a timeout in milliseconds. Zero disables the timeout (default).
+        /// If a nonzero timeout is set, functions FL2_compressStream(), FL2_getDictionaryBuffer(), FL2_updateDictionary(), FL2_getNextCompressedBuffer(),
         /// FL2_flushStream(), and FL2_endStream() may return a timeout code before compression of the current dictionary of data completes.
         /// FL2_isError() returns true for the timeout code, so check the code with FL2_isTimedOut() before testing for errors.
         /// With the exception of FL2_updateDictionary(), the above functions may be called again to wait for completion.
@@ -644,8 +622,9 @@ namespace FastLZMA2Net
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_getNextCompressedBuffer(nint fcs, ref FL2cBuffer cbuf);
+
         /// <summary>
-        /// Returns the number of bytes processed since the stream was initialized. 
+        /// Returns the number of bytes processed since the stream was initialized.
         /// This is a synthetic estimate because the match finder does not proceed sequentially through the data.
         /// If outputSize is not NULL, returns the number of bytes of compressed data generated.
         /// </summary>
@@ -659,7 +638,7 @@ namespace FastLZMA2Net
         internal static partial nuint FL2_getCStreamProgress(nint fcs, ulong outputSize);
 
         /// <summary>
-        /// Waits for compression to end. 
+        /// Waits for compression to end.
         /// This function returns after the timeout set using FL2_setCStreamTimeout has elapsed.
         /// Unnecessary when no timeout is set.
         /// </summary>
@@ -672,7 +651,7 @@ namespace FastLZMA2Net
         internal static partial nuint FL2_waitCStream(nint fcs);
 
         /// <summary>
-        /// Cancels any compression operation underway. 
+        /// Cancels any compression operation underway.
         /// Useful only when dual buffering and/or timeouts  are enabled.
         /// The stream will be returned to an uninitialized state.
         /// </summary>
@@ -681,6 +660,7 @@ namespace FastLZMA2Net
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         internal static partial void FL2_cancelCStream(nint fcs);
+
         /// <summary>
         /// The amount of compressed data remaining to be read from the CStream object.
         /// </summary>
@@ -707,7 +687,7 @@ namespace FastLZMA2Net
         internal static partial nuint FL2_flushStream(nint fcs, ref FL2OutBuffer output);
 
         /// <summary>
-        /// Compress all data remaining in the dictionary buffer(s) and write the stream end marker. 
+        /// Compress all data remaining in the dictionary buffer(s) and write the stream end marker.
         /// It may be necessary to call FL2_endStream() more than once.
         /// If output == NULL the compressed data must be read from the CStream object after each call.
         /// </summary>
@@ -748,6 +728,7 @@ namespace FastLZMA2Net
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_CStream_getParameter(nint fcs, FL2Parameter param);
+
         /// <summary>
         /// memory usage determined by level
         /// </summary>
@@ -760,6 +741,7 @@ namespace FastLZMA2Net
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_estimateCStreamSize(int compressionLevel, uint nbThreads, int dualBuffer);
+
         /// <summary>
         /// memory usage determined by params
         /// </summary>
@@ -787,6 +769,7 @@ namespace FastLZMA2Net
         #endregion Compress Stream
 
         #region Decompress Stream
+
         //  Streaming decompression
         //
         //  A FL2_DStream object is required to track streaming operations.
@@ -804,7 +787,6 @@ namespace FastLZMA2Net
         //  @return : 0 when a stream is completely decoded and fully flushed,
         //            1, which means there is still some decoding to do to complete the stream,
         //            or an error code, which can be tested using FL2_isError().
-
 
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -838,10 +820,10 @@ namespace FastLZMA2Net
         internal static partial void FL2_setDStreamMemoryLimitMt(nint fds, nuint limit);
 
         /// <summary>
-        /// Sets a timeout in milliseconds. Zero disables the timeout. 
-        /// If a nonzero timout is set,FL2_decompressStream() may return a timeout code before decompression of the available data completes.
+        /// Sets a timeout in milliseconds. Zero disables the timeout.
+        /// If a nonzero timeout is set,FL2_decompressStream() may return a timeout code before decompression of the available data completes.
         /// FL2_isError() returns true for the timeout code, so check the code with FL2_isTimedOut() before testing for errors.
-        /// After a timeout occurs, do not call FL2_decompressStream() again unless a call to FL2_waitDStream() returns 1. 
+        /// After a timeout occurs, do not call FL2_decompressStream() again unless a call to FL2_waitDStream() returns 1.
         /// A typical application for timeouts is to update the user on decompression progress.
         /// </summary>
         /// <param name="fds"></param>
@@ -854,8 +836,8 @@ namespace FastLZMA2Net
         internal static partial nuint FL2_setDStreamTimeout(nint fds, uint timeout);
 
         /// <summary>
-        /// Waits for decompression to end after a timeout has occurred. 
-        /// This function returns after the timeout set using FL2_setDStreamTimeout() has elapsed, 
+        /// Waits for decompression to end after a timeout has occurred.
+        /// This function returns after the timeout set using FL2_setDStreamTimeout() has elapsed,
         /// or when decompression of available input is complete.Unnecessary when no timeout is set.
         /// </summary>
         /// <param name="fds"></param>
@@ -867,8 +849,8 @@ namespace FastLZMA2Net
         internal static partial nuint FL2_waitDStream(nint fds);
 
         /// <summary>
-        /// Frees memory allocated for MT decoding. 
-        /// If a timeout is set and the caller is waiting for completion of MT decoding, 
+        /// Frees memory allocated for MT decoding.
+        /// If a timeout is set and the caller is waiting for completion of MT decoding,
         /// decompression in progress will be canceled.
         /// </summary>
         /// <param name="fds"></param>
@@ -889,9 +871,9 @@ namespace FastLZMA2Net
         internal static partial ulong FL2_getDStreamProgress(nint fds);
 
         /// <summary>
-        /// Call this function before decompressing a stream. 
+        /// Call this function before decompressing a stream.
         /// FL2_initDStream_withProp()  must be used for streams which do not include a property byte at position zero.
-     ///The caller is responsible for storing and passing the property byte.
+        ///The caller is responsible for storing and passing the property byte.
         /// </summary>
         /// <param name="fds"></param>
         /// <returns>0 if okay, or an error if the stream object is still in use from a previous call to FL2_decompressStream() (see timeout info above).</returns>
@@ -910,7 +892,7 @@ namespace FastLZMA2Net
         /// <summary>
         /// Reads data from input and decompresses to output.
         /// Returns 1 if the stream is unfinished, 0 if the terminator was encountered(he'll be back)
-        /// and all data was written to output, or an error code. 
+        /// and all data was written to output, or an error code.
         /// Call this function repeatedly if necessary, removing data from output and/or loading data into input before each call.
         /// </summary>
         /// <param name="fds"></param>

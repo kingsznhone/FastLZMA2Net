@@ -270,7 +270,7 @@ Introduction
     FL2LIB_API size_t FL2LIB_CALL FL2_initCStream(FL2_CStream* fcs, int compressionLevel);
 
     /*! FL2_setCStreamTimeout() :
-     *  Sets a timeout in milliseconds. Zero disables the timeout (default). If a nonzero timout is set, functions
+     *  Sets a timeout in milliseconds. Zero disables the timeout (default). If a nonzero timeout is set, functions
      *  FL2_compressStream(), FL2_getDictionaryBuffer(), FL2_updateDictionary(), FL2_getNextCompressedBuffer(),
      *  FL2_flushStream(), and FL2_endStream() may return a timeout code before compression of the current
      *  dictionary of data completes. FL2_isError() returns true for the timeout code, so check the code with
@@ -389,7 +389,7 @@ Introduction
     FL2LIB_API void FL2LIB_CALL FL2_setDStreamMemoryLimitMt(FL2_DStream* fds, size_t limit);
 
     /*! FL2_setDStreamTimeout() :
-     *  Sets a timeout in milliseconds. Zero disables the timeout. If a nonzero timout is set,
+     *  Sets a timeout in milliseconds. Zero disables the timeout. If a nonzero timeout is set,
      *  FL2_decompressStream() may return a timeout code before decompression of the available data
      *  completes. FL2_isError() returns true for the timeout code, so check the code with FL2_isTimedOut()
      *  before testing for errors. After a timeout occurs, do not call FL2_decompressStream() again unless

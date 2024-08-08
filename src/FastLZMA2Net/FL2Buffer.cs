@@ -6,10 +6,12 @@
         /// start of input buffer
         /// </summary>
         public nint src;
+
         /// <summary>
         /// size of input buffer
         /// </summary>
         public nuint size;
+
         /// <summary>
         /// position where reading stopped. Will be updated. Necessarily 0 <= pos <= size
         /// </summary>
@@ -22,10 +24,12 @@
         /// start of output buffer
         /// </summary>
         public nint dst;
+
         /// <summary>
         /// size of output buffer
         /// </summary>
         public nuint size;
+
         /// <summary>
         /// position where writing stopped. Will be updated. Necessarily 0 <= pos <= size
         /// </summary>
@@ -38,6 +42,7 @@
         /// start of available dict buffer
         /// </summary>
         public nint dst;
+
         /// <summary>
         /// size of dict remaining
         /// </summary>
@@ -50,6 +55,7 @@
         /// start of compressed data
         /// </summary>
         public nint src;
+
         /// <summary>
         /// size of compressed data
         /// </summary>
