@@ -2,7 +2,10 @@
 
 namespace FastLZMA2Net
 {
-    public class DecompressStream : Stream, IDisposable
+    /// <summary>
+    /// Streaming decompress context
+    /// </summary>
+    public class DecompressStream : Stream
     {
         private readonly int bufferSize = 16 * 1024 * 1024;
         private byte[] inputBufferArray;
@@ -14,6 +17,10 @@ namespace FastLZMA2Net
         public override bool CanRead => _innerStream != null && _innerStream.CanRead;
         public override bool CanWrite => false;
         public override bool CanSeek => false;
+
+        /// <summary>
+        /// Can't determine data size 
+        /// </summary>
         public override long Length => throw new NotSupportedException();
 
         public override long Position
@@ -22,10 +29,17 @@ namespace FastLZMA2Net
             set => throw new NotSupportedException();
         }
 
-        public DecompressStream(Stream innerStream, uint nbThreads = 0, int inBufferSize = 16 * 1024 * 1024)
+        /// <summary>
+        /// Initialize streaming decompress context
+        /// </summary>
+        /// <param name="srcStream">compressed data store</param>
+        /// <param name="nbThreads"></param>
+        /// <param name="inBufferSize">Native interop buffer size, default = 64M</param>
+        /// <exception cref="FL2Exception"></exception>
+        public DecompressStream(Stream srcStream, uint nbThreads = 0, int inBufferSize = 64 * 1024 * 1024)
         {
             bufferSize = inBufferSize;
-            _innerStream = innerStream;
+            _innerStream = srcStream;
 
             if (nbThreads == 1)
             {
@@ -53,13 +67,18 @@ namespace FastLZMA2Net
             };
         }
 
-        public override void Flush()
-        {
-            _innerStream.Flush();
-        }
 
+        /// <summary>
+        /// Copy decompressed data to destination stream
+        /// </summary>
+        /// <param name="destination"></param>
         public new void CopyTo(Stream destination) => CopyTo(destination, 256 * 1024 * 1024);
 
+        /// <summary>
+        /// Copy decompressed data to destination stream
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <param name="bufferSize">Default = 256M</param>
         public override void CopyTo(Stream destination, int bufferSize = 256 * 1024 * 1024)
         {
             byte[] outBufferArray = new byte[bufferSize];
@@ -72,24 +91,53 @@ namespace FastLZMA2Net
             } while (bytesRead != 0);
         }
 
+        /// <summary>
+        /// How many data has been decompressed
+        /// </summary>
         public ulong Progress => NativeMethods.FL2_getDStreamProgress(_context);
 
+        /// <summary>
+        /// Read decompressed data
+        /// </summary>
+        /// <param name="buffer">buffer array to receive data</param>
+        /// <param name="offset">Start index in buffer</param>
+        /// <param name="count">How many bytes to append</param>
+        /// <returns>How many bytes read.</returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
             return Read(buffer.AsSpan(offset, count));
         }
 
+        /// <summary>
+        /// Read decompressed data
+        /// </summary>
+        /// <param name="buffer">buffer array to receive data</param>
+        /// <returns>How many bytes read.</returns>
         public override int Read(Span<byte> buffer)
         {
             return DecompressCore(buffer);
         }
 
+        /// <summary>
+        /// Read decompressed data asynchronized
+        /// </summary>
+        /// <param name="buffer">buffer array to receive data</param>
+        /// <param name="offset">Start index in buffer</param>
+        /// <param name="count">How many bytes to append</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>How many bytes read.</returns>
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             Memory<byte> bufferMemory = buffer.AsMemory(offset, count);
             return ReadAsync(buffer, cancellationToken).AsTask();
         }
 
+        /// <summary>
+        ///  Read decompressed data asynchronized
+        /// </summary>
+        /// <param name="buffer">buffer array to receive data</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>How many bytes read.</returns>
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
             _innerStream.ReadAsync(new byte[10], 0, 0);
@@ -144,27 +192,78 @@ namespace FastLZMA2Net
             }
         }
 
+        /// <summary>
+        /// Not support
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="origin"></param>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException"></exception>
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
+        /// <summary>
+        /// Not support
+        /// </summary>
+        /// <param name="value"></param>
+        /// <exception cref="NotSupportedException"></exception>
         public override void SetLength(long value) => throw new NotSupportedException();
 
+        /// <summary>
+        /// Not support
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <exception cref="NotSupportedException"></exception>
         public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 
+        /// <summary>
+        /// Not support
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <exception cref="NotSupportedException"></exception>
         public override void Write(ReadOnlySpan<byte> buffer) => throw new NotSupportedException();
 
+        /// <summary>
+        /// Not support
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException"></exception>
         public override int ReadByte() => throw new NotSupportedException();
-
-        public override void Close() => Dispose(true);
-
+        /// <summary>
+        /// Not support
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException"></exception>
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             => throw new NotSupportedException();
 
+        /// <summary>
+        /// Not support
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException"></exception>
         public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
-
+        /// <summary>
+        /// Not support
+        /// </summary>
+        /// <param name="value"></param>
+        /// <exception cref="NotSupportedException"></exception>
         public override void WriteByte(byte value)
             => throw new NotSupportedException();
+        public override void Close() => Dispose(true);
 
+        public override void Flush()
+        {
+            _innerStream.Flush();
+        }
         protected override void Dispose(bool disposing)
         {
             if (!disposed)

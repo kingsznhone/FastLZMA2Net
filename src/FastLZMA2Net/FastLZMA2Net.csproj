@@ -8,15 +8,15 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Platforms>x64;x86;AnyCPU</Platforms>
-		<VersionPrefix>0.3.0</VersionPrefix>
-		<VersionSuffix>alpha</VersionSuffix>
+		<VersionPrefix>0.6.0</VersionPrefix>
+		<VersionSuffix>beta</VersionSuffix>
 		<Version>$(VersionPrefix)-$(VersionSuffix)</Version>
 		<PackageId>FastLZMA2Net</PackageId>
 		<SignAssembly>False</SignAssembly>
 		<Title>FastLZMA2Net</Title>
 		<Authors>KingsZNHONE</Authors>
 		<Copyright>Copyright © KingsZNHONE 2024-present</Copyright>
-		<PackageTags>fast lzma2 compression</PackageTags>
+		<PackageTags>lzma2;compression</PackageTags>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryUrl>https://github.com/kingsznhone/FastLZMA2Net</RepositoryUrl>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -25,6 +25,7 @@
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<AnalysisLevel>latest-all</AnalysisLevel>
 		<PackageIcon>logo.png</PackageIcon>
+		<PackageProjectUrl>https://github.com/kingsznhone/FastLZMA2Net</PackageProjectUrl>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
