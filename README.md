@@ -2,7 +2,7 @@
 
 Fast LZMA2 Wrapper for .NET
 
-⚠️Library is alpha test⚠️
+⚠️Library is beta test⚠️
 
 ⚠️API may have breaking change⚠️
 
@@ -18,7 +18,7 @@ With respect to [Fast LZMA2](https://github.com/conor42/fast-lzma2)
 
 It is reconmended using x64. 
 
-x86 arch may have potential malfunction.
+x86 may have potential malfunction.
 
 # Installation
 
@@ -73,7 +73,7 @@ byte[] buffer = new byte[256 * 1024 * 1024];
 // compress
 using (MemoryStream ms = new MemoryStream())
 {
-    using (CompressionStream cs = new CompressionStream(ms))
+    using (CompressStream cs = new CompressStream(ms))
     {
         cs.Write(origin);
     }
@@ -84,7 +84,7 @@ using (MemoryStream recoveryStream = new MemoryStream())
 {
     using (MemoryStream ms = new MemoryStream(compressed))
     {
-        using (DecompressionStream ds = new DecompressionStream(ms))
+        using (DecompressStream ds = new DecompressStream(ms))
         {
             ds.CopyTo(recoveryStream);
         }
@@ -101,14 +101,13 @@ And .NET array have size limit <2GB
 
 It is recommended to using DFA(direct file access) streaming.
 
-have tested on a 7GB file. 
+Have tested on a 7GB file. 
 
-Streaming Might have potential malfunction.
 ```c#
 //large file streaming compression using Direct file access(>2GB)
 using (FileStream compressedFile = File.OpenWrite(CompressedFilePath))
 {
-    using (CompressionStream cs = new CompressionStream(compressedFile))
+    using (CompressStream cs = new CompressStream(compressedFile))
     {
         using (FileStream sourceFile = File.OpenRead(SourceFilePath))
         {
@@ -135,7 +134,7 @@ using (FileStream recoveryStream = File.OpenWrite(DecompressedFilePath))
 {
     using (FileStream compressedFile = File.OpenRead(CompressedFilePath))
     {
-        using (DecompressionStream ds = new DecompressionStream(compressedFile))
+        using (DecompressStream ds = new DecompressStream(compressedFile))
         {
             ds.CopyTo(recoveryStream);
         }
@@ -145,7 +144,7 @@ using (FileStream recoveryStream = File.OpenWrite(DecompressedFilePath))
 
 # Bug report 
 
-Feel free to open an issue.
+Open an issue.
 
 # Contribution
 
