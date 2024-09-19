@@ -1,14 +1,10 @@
 # FastLZMA2Net
 
-Fast LZMA2 Wrapper for .NET
-
-⚠️Library is beta test⚠️
-
-⚠️API may have breaking change⚠️
+Fast LZMA2 Compression algorithm Wrapper for .NET
 
 [Change Log](ChangeLog.md)
 
-With respect to [Fast LZMA2](https://github.com/conor42/fast-lzma2)
+With respect to [Fast LZMA2 repo](https://github.com/conor42/fast-lzma2)
 
 ![](./readme/benchmark.png)
 
@@ -45,7 +41,7 @@ byte[] decompressed = FL2.Decompress(compressed);
 
 When you have many small file, consider using context to avoid alloc overhead
 
-```c#
+``` c#
 // Context compression, context can be reuse.
 Compressor compressor = new(0) { CompressLevel = 10 };
 compressed = compressor.Compress(origin);
@@ -95,14 +91,13 @@ using (MemoryStream recoveryStream = new MemoryStream())
 
 ### Large file or data (>2GB)
 
-When processing Large file, It is not acceptable reading all data into memory.
+dotnet byte array have size limit <2GB 
 
-And .NET array have size limit <2GB 
+When processing Large file, It is not acceptable reading all data into memory.
 
 It is recommended to using DFA(direct file access) streaming.
 
-Have tested on a 7GB file. 
-
+**Streaming Compression**
 ```c#
 //large file streaming compression using Direct file access(>2GB)
 using (FileStream compressedFile = File.OpenWrite(CompressedFilePath))
@@ -111,24 +106,28 @@ using (FileStream compressedFile = File.OpenWrite(CompressedFilePath))
     {
         using (FileStream sourceFile = File.OpenRead(SourceFilePath))
         {
-            //DO NOT USE sourceFile.CopyTo(cs)
+            //DO NOT USE sourceFile.CopyTo(cs) while using block buffer.
             // CopyTo() calls Write() inside, which terminate stream after 1 cycle.
             long offset = 0;
             while (offset < sourceFile.Length)
             {
                 long remaining = sourceFile.Length - offset;
+                //64M buffer is recommended.
                 int bytesToWrite = (int)Math.Min(64 * 1024 * 1024, remaining);
                 sourceFile.Read(buffer, 0, bytesToWrite);
                 cs.Append(buffer, 0, bytesToWrite);
                 offset += bytesToWrite;
             }
             // make sure always use Flush() after all Append() complete
-            // Flush() add checksum to stream and finish streaming.
+            // Flush() add checksum to end and finish streaming operation.
             cs.Flush();
         }
     }
 }
+```
 
+**Streaming Decompression**
+``` c#
 //large file streaming decompress(>2GB)
 using (FileStream recoveryStream = File.OpenWrite(DecompressedFilePath))
 {
@@ -140,6 +139,27 @@ using (FileStream recoveryStream = File.OpenWrite(DecompressedFilePath))
         }
     }
 }
+```
+
+### Finetune Parameter
+
+``` c#
+Compressor compressor = new(0) { CompressLevel = 10 };
+compressor.SetParameter(FL2Parameter.FastLength, 48);
+```
+
+### Estimate Memory Usage 
+
+``` c# 
+Compressor compressor = new(0) { CompressLevel = 10 };
+nuint size = FL2.EstimateCompressMemoryUsage(compressor.ContextPtr);
+size = EstimateCompressMemoryUsage(compressionLevel=10,nbThreads=8)
+```
+
+### Find Decompressed Data Size
+
+``` c#
+nuint size = FL2.FindDecompressedSize(data);
 ```
 
 # Bug report 

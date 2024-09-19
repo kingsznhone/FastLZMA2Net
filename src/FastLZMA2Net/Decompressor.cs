@@ -5,13 +5,14 @@
     /// </summary>
     public partial class Decompressor : IDisposable
     {
-        private readonly nint _DContext;
+        private readonly nint _context;
+        public nint ContextPtr => _context;
         private bool disposedValue;
 
         /// <summary>
         /// Thread use of the context
         /// </summary>
-        public uint ThreadCount => NativeMethods.FL2_getDCtxThreadCount(_DContext);
+        public uint ThreadCount => NativeMethods.FL2_getDCtxThreadCount(_context);
 
         /// <summary>
         /// Initialize new decompress context
@@ -21,11 +22,11 @@
         {
             if (nbThreads == 1)
             {
-                _DContext = NativeMethods.FL2_createDCtx();
+                _context = NativeMethods.FL2_createDCtx();
             }
             else
             {
-                _DContext = NativeMethods.FL2_createDCtxMt(nbThreads);
+                _context = NativeMethods.FL2_createDCtxMt(nbThreads);
             }
         }
 
@@ -35,7 +36,7 @@
         /// <param name="prop">dictSizeProperty</param>
         public void Init(byte prop)
         {
-            NativeMethods.FL2_initDCtx(_DContext, prop);
+            NativeMethods.FL2_initDCtx(_context, prop);
         }
 
         /// <summary>
@@ -46,14 +47,15 @@
         /// <exception cref="FL2Exception"></exception>
         public byte[] Decompress(byte[] data)
         {
+            ArgumentNullException.ThrowIfNull(data);
             nuint decompressedSize = FL2.FindDecompressedSize(data);
             byte[] decompressed = new byte[decompressedSize];
-            nuint code = NativeMethods.FL2_decompressDCtx(_DContext, decompressed, decompressedSize, data, (nuint)data.Length);
+            nuint code = NativeMethods.FL2_decompressDCtx(_context, decompressed, decompressedSize, data, (nuint)data.Length);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
             }
-            return decompressed;
+            return decompressed[0..(int)code];
         }
 
         protected virtual void Dispose(bool disposing)
@@ -61,7 +63,7 @@
             if (!disposedValue)
             {
                 if (disposing) { }
-                NativeMethods.FL2_freeDCtx(_DContext);
+                NativeMethods.FL2_freeDCtx(_context);
                 disposedValue = true;
             }
         }

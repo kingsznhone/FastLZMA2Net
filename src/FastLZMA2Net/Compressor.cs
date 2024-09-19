@@ -1,4 +1,5 @@
 ﻿using System.IO.MemoryMappedFiles;
+using System.Runtime.Versioning;
 
 namespace FastLZMA2Net
 {
@@ -7,19 +8,20 @@ namespace FastLZMA2Net
     /// </summary>
     public partial class Compressor : IDisposable
     {
-        private readonly nint _CContext;
-        private bool disposed = false;
-        private bool disposedValue;
+        private readonly nint _context;
+        public nint ContextPtr => _context;
+
+        private bool disposed;
 
         /// <summary>
         /// Thread use of the context
         /// </summary>
-        public uint ThreadCount => NativeMethods.FL2_getCCtxThreadCount(_CContext);
+        public uint ThreadCount => NativeMethods.FL2_getCCtxThreadCount(_context);
 
         /// <summary>
         /// Dictionary size property
         /// </summary>
-        public byte DictSizeProperty => NativeMethods.FL2_getCCtxDictProp(_CContext);
+        public byte DictSizeProperty => NativeMethods.FL2_getCCtxDictProp(_context);
 
         /// <summary>
         /// Compress Level [1..10]
@@ -78,7 +80,7 @@ namespace FastLZMA2Net
         /// <param name="compressLevel">default = 6</param>
         public Compressor(uint nbThreads = 0, int compressLevel = 6)
         {
-            _CContext = NativeMethods.FL2_createCCtxMt(nbThreads);
+            _context = NativeMethods.FL2_createCCtxMt(nbThreads);
             CompressLevel = (int)compressLevel;
         }
 
@@ -120,7 +122,7 @@ namespace FastLZMA2Net
             ArgumentNullException.ThrowIfNull(src);
 
             byte[] buffer = new byte[FL2.FindCompressBound(src)];
-            nuint code = NativeMethods.FL2_compressCCtx(_CContext, buffer, (nuint)buffer.Length, src, (nuint)src.Length, compressLevel);
+            nuint code = NativeMethods.FL2_compressCCtx(_context, buffer, (nuint)buffer.Length, src, (nuint)src.Length, compressLevel);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -153,7 +155,7 @@ namespace FastLZMA2Net
                 }
                 using (DirectFileAccessor accessorDst = new DirectFileAccessor(destFile.FullName, FileMode.OpenOrCreate, null, sourceFile.Length, MemoryMappedFileAccess.ReadWrite))
                 {
-                    code = NativeMethods.FL2_compressCCtx(_CContext, accessorDst.mmPtr, code, accessorSrc.mmPtr, (nuint)sourceFile.Length, CompressLevel);
+                    code = NativeMethods.FL2_compressCCtx(_context, accessorDst.mmPtr, code, accessorSrc.mmPtr, (nuint)sourceFile.Length, CompressLevel);
                     if (FL2Exception.IsError(code))
                     {
                         throw new FL2Exception(code);
@@ -177,7 +179,7 @@ namespace FastLZMA2Net
         /// <exception cref="FL2Exception"></exception>
         public nuint SetParameter(FL2Parameter param, nuint value)
         {
-            nuint code = NativeMethods.FL2_CCtx_setParameter(_CContext, param, value);
+            nuint code = NativeMethods.FL2_CCtx_setParameter(_context, param, value);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -193,7 +195,7 @@ namespace FastLZMA2Net
         /// <exception cref="FL2Exception"></exception>
         public nuint GetParameter(FL2Parameter param)
         {
-            var code = NativeMethods.FL2_CCtx_getParameter(_CContext, param);
+            var code = NativeMethods.FL2_CCtx_getParameter(_context, param);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
@@ -203,11 +205,11 @@ namespace FastLZMA2Net
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!disposed)
             {
                 if (disposing) { }
-                NativeMethods.FL2_freeCCtx(_CContext);
-                disposedValue = true;
+                NativeMethods.FL2_freeCCtx(_context);
+                disposed = true;
             }
         }
 

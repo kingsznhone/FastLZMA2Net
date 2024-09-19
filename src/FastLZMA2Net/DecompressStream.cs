@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FastLZMA2Net
 {
@@ -14,6 +15,7 @@ namespace FastLZMA2Net
         private bool disposed;
         private readonly Stream _innerStream;
         private readonly nint _context;
+        public nint ContextPtr => _context;
         public override bool CanRead => _innerStream != null && _innerStream.CanRead;
         public override bool CanWrite => false;
         public override bool CanSeek => false;
@@ -80,6 +82,7 @@ namespace FastLZMA2Net
         /// <param name="bufferSize">Default = 256M</param>
         public override void CopyTo(Stream destination, int bufferSize = 256 * 1024 * 1024)
         {
+            ArgumentNullException.ThrowIfNull(destination);
             byte[] outBufferArray = new byte[bufferSize];
             Span<byte> outBufferSpan = outBufferArray.AsSpan();
             int bytesRead = 0;
@@ -139,7 +142,6 @@ namespace FastLZMA2Net
         /// <returns>How many bytes read.</returns>
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            _innerStream.ReadAsync(new byte[10], 0, 0);
             return new ValueTask<int>(DecompressCore(buffer.Span, cancellationToken));
         }
 
@@ -271,6 +273,7 @@ namespace FastLZMA2Net
         {
             if (!disposed)
             {
+                _innerStream.Dispose();
                 if (disposing)
                 {
                     inputBufferHandle.Free();

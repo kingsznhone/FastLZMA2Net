@@ -9,16 +9,15 @@ namespace FastLZMA2Net
     {
         static NativeMethods()
         {
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                SetWinDllDirectory();
-            else
-            {
-                throw new PlatformNotSupportedException($"{Environment.OSVersion.Platform} is not support");
-            }
+            SetWinDllDirectory();
         }
 
         public static void SetWinDllDirectory()
         {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                throw new PlatformNotSupportedException($"{Environment.OSVersion.Platform} is not support");
+            }
             string path;
 
             var location = Assembly.GetExecutingAssembly().Location;

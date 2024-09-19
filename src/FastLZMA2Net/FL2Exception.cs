@@ -23,16 +23,16 @@
 
     public class FL2Exception : Exception
     {
-        public FL2ErrorCode ErrorCode;
-
+        private readonly FL2ErrorCode _errorCode;
+        public FL2ErrorCode ErrorCode => _errorCode;
         public FL2Exception(nuint code) : base(GetErrorString(GetErrorCode(code)))
         {
-            ErrorCode = GetErrorCode(code);
+            _errorCode = GetErrorCode(code);
         }
 
         public FL2Exception(FL2ErrorCode code) : base(GetErrorString(code))
         {
-            ErrorCode = code;
+            _errorCode = code;
         }
 
         public static FL2ErrorCode GetErrorCode(nuint code)
@@ -66,5 +66,7 @@
             FL2ErrorCode.MaxCode => "",
             _ => "Unspecified error code",
         };
+
+
     }
 }

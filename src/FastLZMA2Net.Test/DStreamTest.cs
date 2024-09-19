@@ -37,6 +37,25 @@ namespace Test
         }
 
         [TestMethod]
+        public async Task TestAsync()
+        {
+            byte[] origin = File.ReadAllBytes(@"Resources/dummy.raw");
+            byte[] compressed = FL2.CompressMT(origin, 10, 1);
+            byte[] buffer = new byte[64*1024*1024];
+            Memory<byte> memory = new Memory<byte>(buffer);
+            int bytesRead = 0;
+            using (MemoryStream ms = new MemoryStream(compressed))
+            {
+                using (DecompressStream ds = new DecompressStream(ms, nbThreads: 0, inBufferSize: 1024))
+                {
+                    bytesRead =  await ds.ReadAsync(memory);
+                }
+            }
+            byte[] recovered = buffer[0..bytesRead];
+            Assert.IsTrue(origin.SequenceEqual(recovered));
+        }
+
+        [TestMethod]
         public async Task TestBlockedAsync()
         {
             //Use Dummy File

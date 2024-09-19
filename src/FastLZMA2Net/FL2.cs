@@ -1,4 +1,5 @@
 ﻿using System.IO.MemoryMappedFiles;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FastLZMA2Net
 {
@@ -83,6 +84,7 @@ namespace FastLZMA2Net
 
         public static nuint FindCompressBound(byte[] src)
         {
+            ArgumentNullException.ThrowIfNull(src);
             return NativeMethods.FL2_compressBound((nuint)src.Length);
         }
 
@@ -94,6 +96,7 @@ namespace FastLZMA2Net
         /// <exception cref="Exception"></exception>
         public static nuint FindDecompressedSize(byte[] data)
         {
+            ArgumentNullException.ThrowIfNull(data);
             var ContentSizeError = nuint.MaxValue;
             nuint size = NativeMethods.FL2_findDecompressedSize(data, (nuint)data.LongLength);
             if (size == ContentSizeError)
@@ -123,6 +126,7 @@ namespace FastLZMA2Net
 
         public static byte[] Compress(byte[] data, int Level)
         {
+            ArgumentNullException.ThrowIfNull(data);
             byte[] compressed = new byte[NativeMethods.FL2_compressBound((nuint)data.Length)];
             nuint code = NativeMethods.FL2_compress(compressed, (nuint)compressed.Length, data, (nuint)data.Length, Level);
             if (FL2Exception.IsError(code))
@@ -134,17 +138,19 @@ namespace FastLZMA2Net
 
         public static byte[] CompressMT(byte[] data, int Level, uint nbThreads)
         {
+            ArgumentNullException.ThrowIfNull(data);
             byte[] compressed = new byte[NativeMethods.FL2_compressBound((nuint)data.Length)];
             nuint code = NativeMethods.FL2_compressMt(compressed, (nuint)compressed.Length, data, (nuint)data.Length, Level, nbThreads);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
             }
-            return compressed;
+            return compressed[0..(int)code];
         }
 
         public static byte[] Decompress(byte[] data)
         {
+            ArgumentNullException.ThrowIfNull(data);
             nuint decompressedSize = NativeMethods.FL2_findDecompressedSize(data, (nuint)data.Length);
             if (FL2Exception.IsError(decompressedSize))
             {
@@ -156,11 +162,12 @@ namespace FastLZMA2Net
             {
                 throw new FL2Exception(code);
             }
-            return decompressed;
+            return decompressed[0..(int)code];
         }
 
         public static byte[] DecompressMT(byte[] data, uint nbThreads)
         {
+            ArgumentNullException.ThrowIfNull(data);
             nuint decompressedSize = NativeMethods.FL2_findDecompressedSize(data, (nuint)data.Length);
             byte[] decompressed = new byte[decompressedSize];
             nuint code = NativeMethods.FL2_decompressMt(decompressed, decompressedSize, data, (nuint)data.Length, nbThreads);
@@ -168,7 +175,7 @@ namespace FastLZMA2Net
             {
                 throw new FL2Exception(code);
             }
-            return decompressed;
+            return decompressed[0..(int)code];
         }
 
         public static nuint EstimateCompressMemoryUsage(int compressionLevel, uint nbThreads)

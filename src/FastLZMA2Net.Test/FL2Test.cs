@@ -13,12 +13,11 @@ namespace Test
         [TestMethod]
         public void Simple()
         {
-            byte[] src = new byte[4096 * 1024];
-            new Random().NextBytes(src);
+            byte[] origin = File.ReadAllBytes(@"Resources/dummy.raw");
 
-            byte[] compressed = FL2.Compress(src, 10);
+            byte[] compressed = FL2.Compress(origin, 10);
             byte[] decompressed = FL2.Decompress(compressed);
-            Assert.IsTrue(src.SequenceEqual(decompressed), "The byte arrays are not equal.");
+            Assert.IsTrue(origin.SequenceEqual(decompressed), "The byte arrays are not equal.");
         }
 
         [TestMethod]

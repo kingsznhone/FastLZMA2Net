@@ -15,6 +15,7 @@ namespace FastLZMA2Net
         private bool disposed = false;
         private readonly Stream _innerStream;
         private readonly nint _context;
+        public nint ContextPtr => _context;
         public override bool CanRead => _innerStream != null && _innerStream.CanRead;
         public override bool CanWrite => false;
         public override bool CanSeek => false;
@@ -407,6 +408,7 @@ namespace FastLZMA2Net
             if (!disposed)
             {
                 Flush();
+                _innerStream.Dispose();
                 if (disposing)
                 {
                     outputBufferHandle.Free();
