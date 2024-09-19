@@ -7,6 +7,7 @@
     {
         private readonly nint _DContext;
         private bool disposedValue;
+
         /// <summary>
         /// Thread use of the context
         /// </summary>
@@ -38,7 +39,7 @@
         }
 
         /// <summary>
-        /// Decompress 
+        /// Decompress
         /// </summary>
         /// <param name="data">Fast LZMA2 data</param>
         /// <returns>Raw data</returns>

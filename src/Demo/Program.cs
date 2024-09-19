@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using FastLZMA2Net;
+﻿using FastLZMA2Net;
 
 namespace Demo
 {
@@ -12,7 +11,7 @@ namespace Demo
             string DecompressedFilePath = @"D:\dummy.recovery.tar";
             // Simple compression
             byte[] origin = File.ReadAllBytes(SourceFilePath);
-            byte[] compressed = FL2.Compress(origin,0);
+            byte[] compressed = FL2.Compress(origin, 0);
             byte[] decompressed = FL2.Decompress(compressed);
 
             // Context compression, context can be reuse.
@@ -26,10 +25,10 @@ namespace Demo
             decompressed = decompressor.Decompress(compressed);
             decompressed = decompressor.Decompress(compressed);
 
-            // Streaming Compression 
-            byte[] buffer = new byte[256 * 1024 * 1024]; 
+            // Streaming Compression
+            byte[] buffer = new byte[256 * 1024 * 1024];
             // use 256MB input buffer
-            
+
             // small file or data (<2GB)
             using (MemoryStream ms = new MemoryStream())
             {
@@ -76,7 +75,6 @@ namespace Demo
                     }
                 }
             }
-
         }
     }
 }

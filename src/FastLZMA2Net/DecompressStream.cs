@@ -19,7 +19,7 @@ namespace FastLZMA2Net
         public override bool CanSeek => false;
 
         /// <summary>
-        /// Can't determine data size 
+        /// Can't determine data size
         /// </summary>
         public override long Length => throw new NotSupportedException();
 
@@ -66,7 +66,6 @@ namespace FastLZMA2Net
                 pos = 0
             };
         }
-
 
         /// <summary>
         /// Copy decompressed data to destination stream
@@ -230,6 +229,7 @@ namespace FastLZMA2Net
         /// <returns></returns>
         /// <exception cref="NotSupportedException"></exception>
         public override int ReadByte() => throw new NotSupportedException();
+
         /// <summary>
         /// Not support
         /// </summary>
@@ -251,6 +251,7 @@ namespace FastLZMA2Net
         /// <exception cref="NotSupportedException"></exception>
         public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
+
         /// <summary>
         /// Not support
         /// </summary>
@@ -258,12 +259,14 @@ namespace FastLZMA2Net
         /// <exception cref="NotSupportedException"></exception>
         public override void WriteByte(byte value)
             => throw new NotSupportedException();
+
         public override void Close() => Dispose(true);
 
         public override void Flush()
         {
             _innerStream.Flush();
         }
+
         protected override void Dispose(bool disposing)
         {
             if (!disposed)

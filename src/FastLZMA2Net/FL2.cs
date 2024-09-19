@@ -9,7 +9,6 @@ namespace FastLZMA2Net
         public static readonly Version Version = new Version(1, 0, 1);
         public static int VersionNumber => Version.Major * 100 * 100 + Version.Minor * 100 + Version.Build;
         public static string VersionString => $"{Version.Major}.{Version.Minor}.{Version.Build}";
-
         public static int MaxThreads => _maxThreads;
         public static int DictSizeMin => 1 << 20; //pow(2,20)
         public static int DictSizeMax => nint.Size == 4 ? 1 << 27 : 1 << 30; //pow(2,30)

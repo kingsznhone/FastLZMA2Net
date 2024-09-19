@@ -20,7 +20,7 @@ namespace FastLZMA2Net
         public override bool CanSeek => false;
 
         /// <summary>
-        /// Can't determine decompressed data size 
+        /// Can't determine decompressed data size
         /// </summary>
         public override long Length => throw new NotSupportedException();
 
@@ -29,6 +29,7 @@ namespace FastLZMA2Net
             get => throw new NotSupportedException();
             set => throw new NotSupportedException();
         }
+
         /// <summary>
         /// Compress Level [1..10]
         /// </summary>
@@ -39,7 +40,7 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Levels 1..10 Setting to 1 switches to an alternate cLevel table. 
+        /// Levels 1..10 Setting to 1 switches to an alternate cLevel table.
         /// </summary>
         public int HighCompressLevel
         {
@@ -55,8 +56,9 @@ namespace FastLZMA2Net
             get => (int)GetParameter(FL2Parameter.DictionarySize);
             set => SetParameter(FL2Parameter.DictionarySize, (nuint)value);
         }
+
         /// <summary>
-        /// Match finder will resolve string matches up to this length. 
+        /// Match finder will resolve string matches up to this length.
         /// If a longer match exists further back in the input, it will not be found.
         /// Default = 42
         /// </summary>
@@ -65,6 +67,7 @@ namespace FastLZMA2Net
             get => (int)GetParameter(FL2Parameter.SearchDepth);
             set => SetParameter(FL2Parameter.SearchDepth, (nuint)value);
         }
+
         /// <summary>
         /// Only useful for strategies >= opt.
         /// Length of match considered "good enough" to stop search.
@@ -147,7 +150,7 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Start compression and finish stream asynchronized. 
+        /// Start compression and finish stream asynchronized.
         /// </summary>
         /// <param name="buffer">Raw data</param>
         /// <param name="offset">Start index in buffer</param>
@@ -162,7 +165,7 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Start compression and finish stream asynchronized. 
+        /// Start compression and finish stream asynchronized.
         /// </summary>
         /// <param name="buffer">Raw data</param>
         /// <param name="cancellationToken"></param>
@@ -315,6 +318,7 @@ namespace FastLZMA2Net
         /// <returns></returns>
         /// <exception cref="NotSupportedException"></exception>
         public override int ReadByte() => throw new NotSupportedException();
+
         /// <summary>
         /// Not support
         /// </summary>
@@ -364,7 +368,6 @@ namespace FastLZMA2Net
                 throw new FL2Exception(code);
             }
         }
-
 
         /// <summary>
         /// Set detail compress parameter

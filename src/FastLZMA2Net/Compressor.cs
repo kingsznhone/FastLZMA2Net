@@ -1,5 +1,4 @@
 ﻿using System.IO.MemoryMappedFiles;
-using System.Text.RegularExpressions;
 
 namespace FastLZMA2Net
 {
@@ -32,7 +31,7 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Levels 1..10 Setting to 1 switches to an alternate cLevel table. 
+        /// Levels 1..10 Setting to 1 switches to an alternate cLevel table.
         /// </summary>
         public int HighCompressLevel
         {
@@ -50,7 +49,7 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Match finder will resolve string matches up to this length. 
+        /// Match finder will resolve string matches up to this length.
         /// If a longer match exists further back in the input, it will not be found.
         /// Default = 42
         /// </summary>
