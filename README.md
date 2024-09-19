@@ -1,5 +1,7 @@
 # FastLZMA2Net
 
+ [![][fastlzma2net-stars-shield]][fastlzma2net-stars-link] [![][fastlzma2net-license-shield]][fastlzma2net-license-link] [![][fastlzma2net-release-shield]][fastlzma2net-release-link] [![][fastlzma2net-releasedate-shield]][fastlzma2net-releasedate-link] [![][fastlzma2net-nuget-shield]][fastlzma2net-nuget-link] [![][fastlzma2net-downloads-shield]][fastlzma2net-downloads-link]
+
 Fast LZMA2 Compression algorithm Wrapper for .NET
 
 [Change Log](ChangeLog.md)
@@ -170,3 +172,17 @@ Open an issue.
 
 PR is welcome.
 
+[fastlzma2net-link]: https://github.com/kingsznhone/FastLZMA2Net
+[fastlzma2net-cover]: https://raw.githubusercontent.com/kingsznhone/FastLZMA2Net/main/readme/benchmark.png
+[fastlzma2net-stars-shield]: https://img.shields.io/github/stars/kingsznhone/FastLZMA2Net?color=ffcb47&labelColor=black&style=flat-square
+[fastlzma2net-stars-link]: https://github.com/kingsznhone/FastLZMA2Net/stargazers
+[fastlzma2net-license-shield]: https://img.shields.io/github/license/kingsznhone/FastLZMA2Net?labelColor=black&style=flat-square
+[fastlzma2net-license-link]: https://github.com/kingsznhone/FastLZMA2Net/blob/main/LICENSE
+[fastlzma2net-release-shield]: https://img.shields.io/github/v/release/kingsznhone/FastLZMA2Net?color=369eff&labelColor=black&logo=github&style=flat-square&include_prereleases
+[fastlzma2net-release-link]: https://github.com/kingsznhone/FastLZMA2Net/releases
+[fastlzma2net-releasedate-shield]: https://img.shields.io/github/release-date-pre/kingsznhone/FastLZMA2Net?labelColor=black&style=flat-square
+[fastlzma2net-releasedate-link]: https://github.com/kingsznhone/FastLZMA2Net/releases
+[fastlzma2net-nuget-shield]:https://img.shields.io/nuget/v/FastLZMA2Net?style=flat-square&labelColor=000000
+[fastlzma2net-nuget-link]:https://www.nuget.org/packages/FastLZMA2Net/
+[fastlzma2net-downloads-shield]: https://img.shields.io/github/downloads/kingsznhone/FastLZMA2Net/total?labelColor=black&style=flat-square
+[fastlzma2net-downloads-link]: https://github.com/kingsznhone/FastLZMA2Net/releases
