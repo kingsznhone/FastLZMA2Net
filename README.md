@@ -20,7 +20,7 @@ x86 may have potential malfunction.
 
 # Installation
 
-`PM> Install-Package FastLZMA2Net -prerelease`
+`PM> Install-Package FastLZMA2Net`
 
 # Usage
 
