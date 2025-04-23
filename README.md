@@ -1,6 +1,11 @@
 # FastLZMA2Net
 
- [![][fastlzma2net-stars-shield]][fastlzma2net-stars-link] [![][fastlzma2net-license-shield]][fastlzma2net-license-link] [![][fastlzma2net-release-shield]][fastlzma2net-release-link] [![][fastlzma2net-releasedate-shield]][fastlzma2net-releasedate-link] [![][fastlzma2net-nuget-shield]][fastlzma2net-nuget-link] [![][fastlzma2net-downloads-shield]][fastlzma2net-downloads-link]
+ [![][fastlzma2net-stars-shield]][fastlzma2net-stars-link]
+ [![][fastlzma2net-license-shield]][fastlzma2net-license-link]
+ [![][fastlzma2net-release-shield]][fastlzma2net-release-link]
+ [![][fastlzma2net-releasedate-shield]][fastlzma2net-releasedate-link]
+ [![][fastlzma2net-nuget-shield]][fastlzma2net-nuget-link] 
+ [![][fastlzma2net-downloads-shield]][fastlzma2net-downloads-link]
 
 Fast LZMA2 Compression algorithm Wrapper for .NET
 
@@ -184,5 +189,7 @@ PR is welcome.
 [fastlzma2net-releasedate-link]: https://github.com/kingsznhone/FastLZMA2Net/releases
 [fastlzma2net-nuget-shield]:https://img.shields.io/nuget/v/FastLZMA2Net?style=flat-square&labelColor=000000
 [fastlzma2net-nuget-link]:https://www.nuget.org/packages/FastLZMA2Net/
-[fastlzma2net-downloads-shield]: https://img.shields.io/github/downloads/kingsznhone/FastLZMA2Net/total?labelColor=black&style=flat-square
-[fastlzma2net-downloads-link]: https://github.com/kingsznhone/FastLZMA2Net/releases
+[fastlzma2net-downloads-shield]:https://img.shields.io/nuget/dt/FastLZMA2Net?style=flat-square&logo=nuget&labelColor=black
+[fastlzma2net-downloads-link]:https://www.nuget.org/packages/FastLZMA2Net
+
+
