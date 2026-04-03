@@ -128,7 +128,7 @@ namespace FastLZMA2Net
         /// <returns>Decompressed size in bytes.</returns>
         /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
         /// <exception cref="FL2Exception">Thrown when the file is corrupt.</exception>
-        public static unsafe nuint FindDecompressedSize(string filePath)
+        public static nuint FindDecompressedSize(string filePath)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
             FileInfo file = new FileInfo(filePath);
@@ -138,7 +138,7 @@ namespace FastLZMA2Net
             }
             using (DirectFileAccessor accessor = new DirectFileAccessor(filePath, FileMode.Open, null, file.Length, MemoryMappedFileAccess.Read))
             {
-                var size = NativeMethods.FL2_findDecompressedSize(accessor.mmPtr, (nuint)file.Length);
+                var size = NativeMethods.FL2_findDecompressedSize(accessor.AsReadOnlySpan(), (nuint)file.Length);
                 if (size == nuint.MaxValue)
                 {
                     throw new FL2Exception(size);
@@ -177,28 +177,19 @@ namespace FastLZMA2Net
         /// <summary>
         /// Compresses data from a <see cref="ReadOnlySpan{T}"/> source.
         /// </summary>
-        public static unsafe byte[] Compress(ReadOnlySpan<byte> data, int level)
+        public static byte[] Compress(ReadOnlySpan<byte> data, int level)
         {
             nuint bound = NativeMethods.FL2_compressBound((nuint)data.Length);
             byte[] buffer = ArrayPool<byte>.Shared.Rent(checked((int)bound));
-            nint ctx = NativeMethods.FL2_createCCtx();
-            if (ctx == IntPtr.Zero)
-                throw new FL2Exception(FL2ErrorCode.MemoryAllocation);
             try
             {
-                nuint code;
-                fixed (byte* pSrc = data)
-                fixed (byte* pDst = buffer)
-                {
-                    code = NativeMethods.FL2_compressCCtx(ctx, pDst, bound, pSrc, (nuint)data.Length, level);
-                }
+                nuint code = NativeMethods.FL2_compress(buffer, bound, data, (nuint)data.Length, level);
                 if (FL2Exception.IsError(code))
                     throw new FL2Exception(code);
                 return buffer.AsSpan(0, checked((int)code)).ToArray();
             }
             finally
             {
-                NativeMethods.FL2_freeCCtx(ctx);
                 ArrayPool<byte>.Shared.Return(buffer);
             }
         }
@@ -234,28 +225,19 @@ namespace FastLZMA2Net
         /// <summary>
         /// Compresses data from a <see cref="ReadOnlySpan{T}"/> source using multiple threads.
         /// </summary>
-        public static unsafe byte[] CompressMT(ReadOnlySpan<byte> data, int level, uint nbThreads)
+        public static byte[] CompressMT(ReadOnlySpan<byte> data, int level, uint nbThreads)
         {
             nuint bound = NativeMethods.FL2_compressBound((nuint)data.Length);
             byte[] buffer = ArrayPool<byte>.Shared.Rent(checked((int)bound));
-            nint ctx = NativeMethods.FL2_createCCtxMt(nbThreads);
-            if (ctx == IntPtr.Zero)
-                throw new FL2Exception(FL2ErrorCode.MemoryAllocation);
             try
             {
-                nuint code;
-                fixed (byte* pSrc = data)
-                fixed (byte* pDst = buffer)
-                {
-                    code = NativeMethods.FL2_compressCCtx(ctx, pDst, bound, pSrc, (nuint)data.Length, level);
-                }
+                nuint code = NativeMethods.FL2_compressMt(buffer, bound, data, (nuint)data.Length, level, nbThreads);
                 if (FL2Exception.IsError(code))
                     throw new FL2Exception(code);
                 return buffer.AsSpan(0, checked((int)code)).ToArray();
             }
             finally
             {
-                NativeMethods.FL2_freeCCtx(ctx);
                 ArrayPool<byte>.Shared.Return(buffer);
             }
         }
@@ -286,35 +268,16 @@ namespace FastLZMA2Net
         /// <summary>
         /// Decompresses data from a <see cref="ReadOnlySpan{T}"/> source.
         /// </summary>
-        public static unsafe byte[] Decompress(ReadOnlySpan<byte> data)
+        public static byte[] Decompress(ReadOnlySpan<byte> data)
         {
-            nuint decompressedSize;
-            fixed (byte* pSrc = data)
-            {
-                decompressedSize = NativeMethods.FL2_findDecompressedSize(pSrc, (nuint)data.Length);
-            }
+            nuint decompressedSize = NativeMethods.FL2_findDecompressedSize(data, (nuint)data.Length);
             if (FL2Exception.IsError(decompressedSize))
                 throw new FL2Exception(decompressedSize);
             byte[] decompressed = new byte[checked((int)decompressedSize)];
-            nint ctx = NativeMethods.FL2_createDCtx();
-            if (ctx == IntPtr.Zero)
-                throw new FL2Exception(FL2ErrorCode.MemoryAllocation);
-            try
-            {
-                nuint code;
-                fixed (byte* pSrc = data)
-                fixed (byte* pDst = decompressed)
-                {
-                    code = NativeMethods.FL2_decompressDCtx(ctx, pDst, decompressedSize, pSrc, (nuint)data.Length);
-                }
-                if (FL2Exception.IsError(code))
-                    throw new FL2Exception(code);
-                return code == decompressedSize ? decompressed : decompressed[0..checked((int)code)];
-            }
-            finally
-            {
-                NativeMethods.FL2_freeDCtx(ctx);
-            }
+            nuint code = NativeMethods.FL2_decompress(decompressed, decompressedSize, data, (nuint)data.Length);
+            if (FL2Exception.IsError(code))
+                throw new FL2Exception(code);
+            return code == decompressedSize ? decompressed : decompressed[0..checked((int)code)];
         }
 
         /// <summary>
@@ -342,35 +305,16 @@ namespace FastLZMA2Net
         /// <summary>
         /// Decompresses data from a <see cref="ReadOnlySpan{T}"/> source using multiple threads.
         /// </summary>
-        public static unsafe byte[] DecompressMT(ReadOnlySpan<byte> data, uint nbThreads)
+        public static byte[] DecompressMT(ReadOnlySpan<byte> data, uint nbThreads)
         {
-            nuint decompressedSize;
-            fixed (byte* pSrc = data)
-            {
-                decompressedSize = NativeMethods.FL2_findDecompressedSize(pSrc, (nuint)data.Length);
-            }
+            nuint decompressedSize = NativeMethods.FL2_findDecompressedSize(data, (nuint)data.Length);
             if (FL2Exception.IsError(decompressedSize))
                 throw new FL2Exception(decompressedSize);
             byte[] decompressed = new byte[checked((int)decompressedSize)];
-            nint ctx = NativeMethods.FL2_createDCtxMt(nbThreads);
-            if (ctx == IntPtr.Zero)
-                throw new FL2Exception(FL2ErrorCode.MemoryAllocation);
-            try
-            {
-                nuint code;
-                fixed (byte* pSrc = data)
-                fixed (byte* pDst = decompressed)
-                {
-                    code = NativeMethods.FL2_decompressDCtx(ctx, pDst, decompressedSize, pSrc, (nuint)data.Length);
-                }
-                if (FL2Exception.IsError(code))
-                    throw new FL2Exception(code);
-                return code == decompressedSize ? decompressed : decompressed[0..checked((int)code)];
-            }
-            finally
-            {
-                NativeMethods.FL2_freeDCtx(ctx);
-            }
+            nuint code = NativeMethods.FL2_decompressMt(decompressed, decompressedSize, data, (nuint)data.Length, nbThreads);
+            if (FL2Exception.IsError(code))
+                throw new FL2Exception(code);
+            return code == decompressedSize ? decompressed : decompressed[0..checked((int)code)];
         }
 
         /// <summary>

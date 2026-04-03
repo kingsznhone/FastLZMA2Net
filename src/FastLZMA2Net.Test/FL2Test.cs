@@ -50,12 +50,12 @@ namespace Test
                 parameters = FL2.GetPresetLevelParameters(level, 0);
             }
 
-            var exception = Assert.ThrowsException<FL2Exception>(() =>
+            var exception = Assert.ThrowsExactly<FL2Exception>(() =>
             {
                 parameters = FL2.GetPresetLevelParameters(-1, 0);
             });
             Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.ParameterOutOfBound);
-            exception = Assert.ThrowsException<FL2Exception>(() =>
+            exception = Assert.ThrowsExactly<FL2Exception>(() =>
             {
                 parameters = FL2.GetPresetLevelParameters(11, 0);
             });

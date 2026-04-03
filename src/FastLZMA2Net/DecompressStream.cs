@@ -7,9 +7,8 @@ namespace FastLZMA2Net
     /// </summary>
     public class DecompressStream : Stream
     {
-        private readonly int bufferSize = 16 * 1024 * 1024;
+        private readonly nint bufferSize = 16 * 1024 * 1024;
         private byte[] inputBufferArray;
-        private GCHandle inputBufferHandle;
         private FL2InBuffer inBuffer;
         private bool disposed;
         private readonly Stream _innerStream;
@@ -37,9 +36,11 @@ namespace FastLZMA2Net
         /// <param name="nbThreads"></param>
         /// <param name="inBufferSize">Native interop buffer size, default = 64M</param>
         /// <exception cref="FL2Exception"></exception>
-        public DecompressStream(Stream srcStream, uint nbThreads = 0, int inBufferSize = 64 * 1024 * 1024)
+        public DecompressStream(Stream srcStream, uint nbThreads = 0, nint inBufferSize = 64 * 1024 * 1024)
         {
             ArgumentNullException.ThrowIfNull(srcStream);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(inBufferSize);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan((long)inBufferSize, Array.MaxLength);
             bufferSize = inBufferSize;
             _innerStream = srcStream;
 
@@ -61,15 +62,14 @@ namespace FastLZMA2Net
 
             // Use the stream's known length only when it is seekable; fall back to bufferSize for
             // non-seekable sources (NetworkStream, GZipStream, etc.) where Length throws.
-            long safeLength = _innerStream.CanSeek
-                ? Math.Min(_innerStream.Length, bufferSize)
+            nint safeLength = _innerStream.CanSeek
+                ? (nint)Math.Min(_innerStream.Length, (long)bufferSize)
                 : bufferSize;
-            inputBufferArray = new byte[safeLength];
+            inputBufferArray = GC.AllocateArray<byte>((int)safeLength, pinned: true);
             int bytesRead = _innerStream.Read(inputBufferArray, 0, inputBufferArray.Length);
-            inputBufferHandle = GCHandle.Alloc(inputBufferArray, GCHandleType.Pinned);
             inBuffer = new FL2InBuffer()
             {
-                src = inputBufferHandle.AddrOfPinnedObject(),
+                src = Marshal.UnsafeAddrOfPinnedArrayElement(inputBufferArray, 0),
                 size = (nuint)bytesRead,
                 pos = 0
             };
@@ -293,10 +293,10 @@ namespace FastLZMA2Net
             {
                 if (disposing)
                 {
-                    _innerStream.Dispose();
+                    _innerStream?.Dispose();
                 }
-                inputBufferHandle.Free();
-                NativeMethods.FL2_freeDStream(_context);
+                if (_context != IntPtr.Zero)
+                    NativeMethods.FL2_freeDStream(_context);
                 disposed = true;
             }
         }
@@ -308,8 +308,8 @@ namespace FastLZMA2Net
         {
             if (!disposed)
             {
-                inputBufferHandle.Free();
-                NativeMethods.FL2_freeDStream(_context);
+                if (_context != IntPtr.Zero)
+                    NativeMethods.FL2_freeDStream(_context);
                 await _innerStream.DisposeAsync().ConfigureAwait(false);
                 disposed = true;
             }

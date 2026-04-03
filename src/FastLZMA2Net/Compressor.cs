@@ -173,20 +173,15 @@ namespace FastLZMA2Net
         /// Compresses data from a <see cref="ReadOnlySpan{T}"/> source. Avoids a copy when the caller
         /// already holds data in a pooled or stack-allocated buffer.
         /// </summary>
-        public unsafe byte[] Compress(ReadOnlySpan<byte> src, int compressLevel = 0)
+        public byte[] Compress(ReadOnlySpan<byte> src, int compressLevel = 0)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
             nuint bound = FL2.FindCompressBound((nuint)src.Length);
             byte[] buffer = ArrayPool<byte>.Shared.Rent(checked((int)bound));
             try
             {
-                nuint code;
-                fixed (byte* pSrc = src)
-                fixed (byte* pDst = buffer)
-                {
-                    code = NativeMethods.FL2_compressCCtx(_context, pDst, bound, pSrc, (nuint)src.Length,
-                        compressLevel == 0 ? CompressLevel : compressLevel);
-                }
+                nuint code = NativeMethods.FL2_compressCCtx(_context, buffer, bound, src, (nuint)src.Length,
+                    compressLevel == 0 ? CompressLevel : compressLevel);
                 if (FL2Exception.IsError(code))
                     throw new FL2Exception(code);
                 return buffer.AsSpan(0, checked((int)code)).ToArray();
@@ -204,7 +199,7 @@ namespace FastLZMA2Net
         /// <param name="dstPath">output file path</param>
         /// <returns>Bytes Compressed</returns>
         /// <exception cref="FL2Exception"></exception>
-        public unsafe nuint Compress(string srcPath, string dstPath)
+        public nuint Compress(string srcPath, string dstPath)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
             ArgumentException.ThrowIfNullOrWhiteSpace(srcPath);
@@ -225,7 +220,7 @@ namespace FastLZMA2Net
                 }
                 using (DirectFileAccessor accessorDst = new DirectFileAccessor(destFile.FullName, FileMode.OpenOrCreate, null, sourceFile.Length, MemoryMappedFileAccess.ReadWrite))
                 {
-                    code = NativeMethods.FL2_compressCCtx(_context, accessorDst.mmPtr, code, accessorSrc.mmPtr, (nuint)sourceFile.Length, CompressLevel);
+                    code = NativeMethods.FL2_compressCCtx(_context, accessorDst.AsSpan(), code, accessorSrc.AsReadOnlySpan(), (nuint)sourceFile.Length, CompressLevel);
                     if (FL2Exception.IsError(code))
                     {
                         throw new FL2Exception(code);

@@ -7,9 +7,8 @@ namespace FastLZMA2Net
     /// </summary>
     public class CompressStream : Stream
     {
-        private readonly int bufferSize;
+        private readonly nint bufferSize;
         private byte[] outputBufferArray;
-        private GCHandle outputBufferHandle;
         private FL2OutBuffer outBuffer;
 
         private bool disposed = false;
@@ -88,9 +87,11 @@ namespace FastLZMA2Net
         /// <param name="nbThreads">thread use, auto = 0</param>
         /// <param name="outBufferSize">Native interop buffer size, default = 64M</param>
         /// <exception cref="FL2Exception"></exception>
-        public CompressStream(Stream dstStream, uint nbThreads = 0, int outBufferSize = 64 * 1024 * 1024)
+        public CompressStream(Stream dstStream, uint nbThreads = 0, nint outBufferSize = 64 * 1024 * 1024)
         {
             ArgumentNullException.ThrowIfNull(dstStream);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(outBufferSize);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan((long)outBufferSize, Array.MaxLength);
             bufferSize = outBufferSize;
             _innerStream = dstStream;
             _context = NativeMethods.FL2_createCStreamMt(nbThreads, 1);
@@ -103,11 +104,10 @@ namespace FastLZMA2Net
             }
 
             // Compressed stream output buffer
-            outputBufferArray = new byte[bufferSize];
-            outputBufferHandle = GCHandle.Alloc(outputBufferArray, GCHandleType.Pinned);
+            outputBufferArray = GC.AllocateArray<byte>((int)bufferSize, pinned: true);
             outBuffer = new FL2OutBuffer()
             {
-                dst = outputBufferHandle.AddrOfPinnedObject(),
+                dst = Marshal.UnsafeAddrOfPinnedArrayElement(outputBufferArray, 0),
                 size = (nuint)outputBufferArray.Length,
                 pos = 0
             };
@@ -417,8 +417,8 @@ namespace FastLZMA2Net
                     Flush();
                     _innerStream.Dispose();
                 }
-                outputBufferHandle.Free();
-                NativeMethods.FL2_freeCStream(_context);
+                if (_context != IntPtr.Zero)
+                    NativeMethods.FL2_freeCStream(_context);
                 disposed = true;
             }
         }
@@ -436,8 +436,8 @@ namespace FastLZMA2Net
                 }
                 finally
                 {
-                    outputBufferHandle.Free();
-                    NativeMethods.FL2_freeCStream(_context);
+                    if (_context != IntPtr.Zero)
+                        NativeMethods.FL2_freeCStream(_context);
                     await _innerStream.DisposeAsync().ConfigureAwait(false);
                     disposed = true;
                 }

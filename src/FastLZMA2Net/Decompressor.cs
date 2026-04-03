@@ -74,23 +74,14 @@
         /// Decompresses data from a <see cref="ReadOnlySpan{T}"/> source. Avoids a copy when the caller
         /// already holds data in a pooled or stack-allocated buffer.
         /// </summary>
-        public unsafe byte[] Decompress(ReadOnlySpan<byte> data)
+        public byte[] Decompress(ReadOnlySpan<byte> data)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
-            nuint decompressedSize;
-            fixed (byte* pSrc = data)
-            {
-                decompressedSize = NativeMethods.FL2_findDecompressedSize(pSrc, (nuint)data.Length);
-            }
+            nuint decompressedSize = NativeMethods.FL2_findDecompressedSize(data, (nuint)data.Length);
             if (FL2Exception.IsError(decompressedSize))
                 throw new FL2Exception(decompressedSize);
             byte[] decompressed = new byte[checked((int)decompressedSize)];
-            nuint code;
-            fixed (byte* pSrc = data)
-            fixed (byte* pDst = decompressed)
-            {
-                code = NativeMethods.FL2_decompressDCtx(_context, pDst, decompressedSize, pSrc, (nuint)data.Length);
-            }
+            nuint code = NativeMethods.FL2_decompressDCtx(_context, decompressed, decompressedSize, data, (nuint)data.Length);
             if (FL2Exception.IsError(code))
                 throw new FL2Exception(code);
             return code == decompressedSize ? decompressed : decompressed[0..checked((int)code)];

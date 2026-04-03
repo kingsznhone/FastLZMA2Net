@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace FastLZMA2Net
 {
-    internal static unsafe partial class NativeMethods
+    internal static partial class NativeMethods
     {
         static NativeMethods()
         {
@@ -111,6 +111,12 @@ namespace FastLZMA2Net
         [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_compress([In] byte[] dst, nuint dstCapacity, [In] byte[] src, nuint srcSize, int compressionLevel);
 
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
+        internal static partial nuint FL2_compress(Span<byte> dst, nuint dstCapacity, ReadOnlySpan<byte> src, nuint srcSize, int compressionLevel);
+
         /// <summary>
         /// Compresses `src` content as a single LZMA2 compressed stream into already allocated `dst`.
         /// Call FL2_compressMt() to use > 1 thread.Specify nbThreads = 0 to use all cores.
@@ -127,6 +133,12 @@ namespace FastLZMA2Net
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_compressMt([In] byte[] dst, nuint dstCapacity, [In] byte[] src, nuint srcSize, int compressionLevel, uint nbThreads);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
+        internal static partial nuint FL2_compressMt(Span<byte> dst, nuint dstCapacity, ReadOnlySpan<byte> src, nuint srcSize, int compressionLevel, uint nbThreads);
 
         /// <summary>
         /// Decompresses a single LZMA2 compressed stream from `src` into already allocated `dst`.
@@ -147,6 +159,12 @@ namespace FastLZMA2Net
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_decompress([In] byte[] dst, nuint dstCapacity, [In] byte[] src, nuint compressedSize);
+
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
+        internal static partial nuint FL2_decompress(Span<byte> dst, nuint dstCapacity, ReadOnlySpan<byte> src, nuint compressedSize);
 
         /// <summary>
         /// Decompresses a single LZMA2 compressed stream from `src` into already allocated `dst`.
@@ -170,6 +188,12 @@ namespace FastLZMA2Net
         [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_decompressMt([In] byte[] dst, nuint dstCapacity, [In] byte[] src, nuint compressedSize, uint nbThreads);
 
+        [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+        [return: MarshalAs(UnmanagedType.SysUInt)]
+        internal static partial nuint FL2_decompressMt(Span<byte> dst, nuint dstCapacity, ReadOnlySpan<byte> src, nuint compressedSize, uint nbThreads);
+
         #endregion Simple Function
 
         #region Helper Functions
@@ -189,20 +213,11 @@ namespace FastLZMA2Net
         [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_findDecompressedSize([In] byte[] src, nuint srcSize);
 
-        /// <summary>
-        /// A property byte is assumed to exist at position 0 in `src`. If the stream was created without one,  subtract 1 byte from `src` when passing it to the function.
-        /// </summary>
-        /// <param name="src">should point to the start of a LZMA2 encoded stream</param>
-        /// <param name="srcSize">must be at least as large as the LZMA2 stream including end marker.</param>
-        /// <returns>
-        /// decompressed size of the stream in `src`, if known.
-        /// FL2_CONTENTSIZE_ERROR (nuint.max) if an error occurred (e.g. corruption, srcSize too small)
-        /// </returns>
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         [return: MarshalAs(UnmanagedType.SysUInt)]
-        internal static partial nuint FL2_findDecompressedSize(byte* src, nuint srcSize);
+        internal static partial nuint FL2_findDecompressedSize(ReadOnlySpan<byte> src, nuint srcSize);
 
         /// <summary>
         /// Get the dictionary size property.
@@ -387,8 +402,8 @@ namespace FastLZMA2Net
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_compressCCtx(nint context,
-                                              byte* dst, nuint dstCapacity,
-                                              byte* src, nuint srcSize,
+                                              Span<byte> dst, nuint dstCapacity,
+                                              ReadOnlySpan<byte> src, nuint srcSize,
                                               int compressionLevel);
 
         /// <summary>
@@ -513,8 +528,8 @@ namespace FastLZMA2Net
         [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
         [return: MarshalAs(UnmanagedType.SysUInt)]
         internal static partial nuint FL2_decompressDCtx(nint context,
-                                                byte* dst, nuint dstCapacity,
-                                                byte* src, nuint srcSize);
+                                                Span<byte> dst, nuint dstCapacity,
+                                                ReadOnlySpan<byte> src, nuint srcSize);
 
         #endregion Decompress Context
 

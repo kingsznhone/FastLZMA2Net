@@ -67,12 +67,12 @@ namespace Test
             Compressor compressorST = new Compressor();
             compressorST.DictionarySize = FL2.DictSizeMin;
             compressorST.DictionarySize = FL2.DictSizeMax;
-            var exception = Assert.ThrowsException<FL2Exception>(() =>
+            var exception = Assert.ThrowsExactly<FL2Exception>(() =>
             {
                 compressorST.DictionarySize = FL2.DictSizeMin >> 1;
             });
             Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.ParameterOutOfBound);
-            exception = Assert.ThrowsException<FL2Exception>(() =>
+            exception = Assert.ThrowsExactly<FL2Exception>(() =>
             {
                 compressorST.DictionarySize = FL2.DictSizeMax << 1;
             });
@@ -88,17 +88,17 @@ namespace Test
                 compressorST.CompressLevel = i;
             }
 
-            var exception = Assert.ThrowsException<FL2Exception>(() =>
+            var exception = Assert.ThrowsExactly<FL2Exception>(() =>
             {
                 compressorST.CompressLevel = -1;
             });
             Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.ParameterOutOfBound);
-            exception = Assert.ThrowsException<FL2Exception>(() =>
+            exception = Assert.ThrowsExactly<FL2Exception>(() =>
             {
                 compressorST.CompressLevel = 0;
             });
             Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.ParameterOutOfBound);
-            exception = Assert.ThrowsException<FL2Exception>(() =>
+            exception = Assert.ThrowsExactly<FL2Exception>(() =>
             {
                 compressorST.CompressLevel = 11;
             });
