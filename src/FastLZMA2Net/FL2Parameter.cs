@@ -1,5 +1,8 @@
 ﻿namespace FastLZMA2Net
 {
+    /// <summary>
+    /// Native encoder and decoder parameter identifiers.
+    /// </summary>
     public enum FL2Parameter
     {
         /// <summary>
@@ -17,14 +20,14 @@
 
         /// <summary>
         /// Maximum allowed back-reference distance, expressed as power of 2.
-        /// Must be clamped between FL2_DICTLOG_MIN and FL2_DICTLOG_MAX.
+        /// Must be clamped between FL2_DICTLOG_MIN &amp; FL2_DICTLOG_MAX.
         /// Default = 24
         /// </summary>
         DictionaryLog,
 
         /// <summary>
         /// Same as above but expressed as an absolute value.
-        /// Must be clamped between FL2_DICTSIZE_MIN and FL2_DICTSIZE_MAX.
+        /// Must be clamped between FL2_DICTSIZE_MIN &amp; FL2_DICTSIZE_MAX.
         /// Default = 16 Mb
         /// </summary>
         DictionarySize,
@@ -57,7 +60,7 @@
 
         /// <summary>
         /// Size of the hybrid mode HC3 hash chain, as a power of 2.
-        /// Resulting table size is (1 << (chainLog+2)) bytes.
+        /// Resulting table size is (1 &lt;&lt; (chainLog+2)) bytes.
         /// Larger tables result in better and slower compression.
         /// This parameter is only used by the hybrid "ultra" strategy.
         /// Default = 9

@@ -14,8 +14,17 @@ namespace FastLZMA2Net
         private readonly Stream _innerStream;
         private readonly nint _context;
         internal nint ContextPtr => _context;
+        /// <summary>
+        /// Gets whether the stream can be read.
+        /// </summary>
         public override bool CanRead => !disposed;
+        /// <summary>
+        /// Gets whether the stream can be written to.
+        /// </summary>
         public override bool CanWrite => false;
+        /// <summary>
+        /// Gets whether the stream supports seeking.
+        /// </summary>
         public override bool CanSeek => false;
 
         /// <summary>
@@ -23,6 +32,9 @@ namespace FastLZMA2Net
         /// </summary>
         public override long Length => throw new NotSupportedException();
 
+        /// <summary>
+        /// Gets or sets the current position in the stream.
+        /// </summary>
         public override long Position
         {
             get => throw new NotSupportedException();
@@ -33,7 +45,7 @@ namespace FastLZMA2Net
         /// Initialize streaming decompress context
         /// </summary>
         /// <param name="srcStream">compressed data store</param>
-        /// <param name="nbThreads"></param>
+        /// <param name="nbThreads">Number of threads to use; 0 auto-selects all cores, 1 uses a single-threaded context.</param>
         /// <param name="inBufferSize">Native interop buffer size, default = 64M</param>
         /// <exception cref="FL2Exception"></exception>
         public DecompressStream(Stream srcStream, uint nbThreads = 0, nint inBufferSize = 64 * 1024 * 1024)
@@ -92,7 +104,7 @@ namespace FastLZMA2Net
             ArgumentNullException.ThrowIfNull(destination);
             byte[] outBufferArray = new byte[bufferSize];
             Span<byte> outBufferSpan = outBufferArray.AsSpan();
-            int bytesRead = 0;
+            int bytesRead;
             do
             {
                 bytesRead = Read(outBufferSpan);
@@ -101,7 +113,7 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// How many data has been decompressed
+        /// Gets the number of bytes decompressed so far.
         /// </summary>
         public ulong Progress
         {
@@ -137,7 +149,7 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Read decompressed data asynchronized
+        /// Reads decompressed data asynchronously.
         /// </summary>
         /// <param name="buffer">buffer array to receive data</param>
         /// <param name="offset">Start index in buffer</param>
@@ -152,7 +164,7 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        ///  Read decompressed data asynchronized
+        /// Reads decompressed data asynchronously.
         /// </summary>
         /// <param name="buffer">buffer array to receive data</param>
         /// <param name="cancellationToken"></param>
@@ -172,7 +184,7 @@ namespace FastLZMA2Net
             ref byte ref_buffer = ref MemoryMarshal.GetReference(buffer);
             fixed (byte* pBuffer = &ref_buffer)
             {
-                FL2OutBuffer outBuffer = new FL2OutBuffer()
+                FL2OutBuffer outBuffer = new()
                 {
                     dst = (nint)pBuffer,
                     size = (nuint)buffer.Length,
@@ -281,12 +293,19 @@ namespace FastLZMA2Net
         public override void WriteByte(byte value)
             => throw new NotSupportedException();
 
+        /// <summary>
+        /// Flushes the underlying destination stream.
+        /// </summary>
         public override void Flush()
         {
             ObjectDisposedException.ThrowIf(disposed, this);
             _innerStream.Flush();
         }
 
+        /// <summary>
+        /// Releases the decompression stream resources.
+        /// </summary>
+        /// <param name="disposing">True when managed resources are also being released.</param>
         protected override void Dispose(bool disposing)
         {
             if (!disposed)
@@ -299,6 +318,7 @@ namespace FastLZMA2Net
                     NativeMethods.FL2_freeDStream(_context);
                 disposed = true;
             }
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -316,6 +336,10 @@ namespace FastLZMA2Net
             GC.SuppressFinalize(this);
         }
 
+
+        /// <summary>
+        /// Finalizes the decompression stream if it was not disposed.
+        /// </summary>
         ~DecompressStream()
         {
             Dispose(disposing: false);

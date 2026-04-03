@@ -17,156 +17,166 @@ With respect to [Fast LZMA2 repo](https://github.com/conor42/fast-lzma2)
 
 # Requirements
 
-**Windows x86/64 .NET 8 runtime**
+**.NET 8 / .NET 10**
 
-It is reconmended using x64. 
+| OS | Architectures |
+|---|---|
+| Windows | x64 · x86 · arm64 |
+| Linux (glibc) | x64 · x86 · arm64 · arm |
+| Linux (musl / Alpine) | x64 · arm64 |
 
-x86 may have potential malfunction.
+> x86 may have potential malfunction.
 
 # Installation
 
 `PM> Install-Package FastLZMA2Net`
 
+# API Overview
+
+| Class | Description |
+|---|---|
+| `FL2` | Static helpers — one-shot compress / decompress, memory estimation |
+| `Compressor` | Reusable compression context |
+| `Decompressor` | Reusable decompression context |
+| `CompressStream` | Streaming compression (`Stream` subclass) |
+| `DecompressStream` | Streaming decompression (`Stream` subclass) |
+
 # Usage
 
 ### Simple compression
 
-When using compression occasionally
-
-``` c#
-string SourceFilePath = @"D:\dummy.tar";
-string CompressedFilePath = @"D:\dummy.tar.fl2";
-string DecompressedFilePath = @"D:\dummy.recovery.tar";
-
-// Simple compression
-byte[] origin = File.ReadAllBytes(SourceFilePath);
-byte[] compressed = FL2.Compress(origin,0);
+```csharp
+byte[] origin       = File.ReadAllBytes(sourceFilePath);
+byte[] compressed   = FL2.Compress(origin, level: 6);
 byte[] decompressed = FL2.Decompress(compressed);
+```
+
+`ReadOnlySpan<byte>` overloads are available to avoid a copy when data is already in a pooled or stack-allocated buffer:
+
+```csharp
+ReadOnlySpan<byte> span = ...;
+byte[] compressed = FL2.Compress(span, level: 6);
+```
+
+### Multi-threaded one-shot compression
+
+```csharp
+byte[] compressed   = FL2.CompressMT(origin, level: 6, nbThreads: 0);  // 0 = all cores
+byte[] decompressed = FL2.DecompressMT(compressed, nbThreads: 0);
 ```
 
 ### Context Compression
 
-When you have many small file, consider using context to avoid alloc overhead
+Reuse a `Compressor` / `Decompressor` to amortize context-allocation cost across many calls (e.g. batches of small files).
 
-``` c#
-// Context compression, context can be reuse.
-Compressor compressor = new(0) { CompressLevel = 10 };
-compressed = compressor.Compress(origin);
-compressed = compressor.Compress(origin);
-compressed = compressor.Compress(origin);
+```csharp
+using Compressor compressor = new(nbThreads: 0) { CompressLevel = 10 };
+byte[] c1 = compressor.Compress(data1);
+byte[] c2 = compressor.Compress(data2);
 
-Decompressor decompressor = new Decompressor();
-decompressed = decompressor.Decompress(compressed);
-decompressed = decompressor.Decompress(compressed);
-decompressed = decompressor.Decompress(compressed);
+using Decompressor decompressor = new();
+byte[] d1 = decompressor.Decompress(c1);
+byte[] d2 = decompressor.Decompress(c2);
+```
+
+### Async compression
+
+```csharp
+using Compressor compressor = new(nbThreads: 0) { CompressLevel = 6 };
+byte[] compressed = await compressor.CompressAsync(origin, cancellationToken);
+
+using Decompressor decompressor = new();
+byte[] decompressed = await decompressor.DecompressAsync(compressed, cancellationToken);
+```
+
+### File-to-file compression (no memory copy)
+
+Uses memory-mapped I/O — no full read into managed memory.
+
+```csharp
+using Compressor compressor = new(nbThreads: 0) { CompressLevel = 6 };
+nuint compressedBytes = compressor.Compress(sourceFilePath, destFilePath);
 ```
 
 
-### Streaming Compression 
+### Streaming Compression — small data (< 2 GB)
 
-When you have a very large file (>2GB) or slow I/O
-
-``` c# 
-byte[] buffer = new byte[256 * 1024 * 1024]; 
-// use 256MB input buffer 
-// This is suitable for most cases
-``` 
-### small file or data (<2GB)
-``` c# 
+```csharp
 // compress
-using (MemoryStream ms = new MemoryStream())
-{
-    using (CompressStream cs = new CompressStream(ms))
-    {
-        cs.Write(origin);
-    }
-    compressed = ms.ToArray();
-}
+using MemoryStream ms = new();
+using (CompressStream cs = new(ms))
+    cs.Write(origin);
+byte[] compressed = ms.ToArray();
+
 // decompress
-using (MemoryStream recoveryStream = new MemoryStream())
-{
-    using (MemoryStream ms = new MemoryStream(compressed))
-    {
-        using (DecompressStream ds = new DecompressStream(ms))
-        {
-            ds.CopyTo(recoveryStream);
-        }
-    }
-    decompress = recoveryStream.ToArray();
-}
+using MemoryStream recoveryStream = new();
+using (DecompressStream ds = new(new MemoryStream(compressed)))
+    ds.CopyTo(recoveryStream);
+byte[] decompressed = recoveryStream.ToArray();
 ```
 
-### Large file or data (>2GB)
+### Streaming Compression — large files (> 2 GB)
 
-dotnet byte array have size limit <2GB 
+.NET byte arrays are limited to ~2 GB. For larger payloads use streaming with `Append` + `Flush`.
 
-When processing Large file, It is not acceptable reading all data into memory.
+**Compress**
 
-It is recommended to using DFA(direct file access) streaming.
+```csharp
+byte[] buffer = new byte[64 * 1024 * 1024]; // 64 MB read buffer
 
-**Streaming Compression**
-```c#
-//large file streaming compression using Direct file access(>2GB)
-using (FileStream compressedFile = File.OpenWrite(CompressedFilePath))
+using FileStream compressedFile = File.OpenWrite(compressedFilePath);
+using CompressStream cs = new(compressedFile);
+using FileStream sourceFile = File.OpenRead(sourceFilePath);
+
+// Use Append() to feed chunks; Write() finalises the stream after one call.
+long offset = 0;
+while (offset < sourceFile.Length)
 {
-    using (CompressStream cs = new CompressStream(compressedFile))
-    {
-        using (FileStream sourceFile = File.OpenRead(SourceFilePath))
-        {
-            //DO NOT USE sourceFile.CopyTo(cs) while using block buffer.
-            // CopyTo() calls Write() inside, which terminate stream after 1 cycle.
-            long offset = 0;
-            while (offset < sourceFile.Length)
-            {
-                long remaining = sourceFile.Length - offset;
-                //64M buffer is recommended.
-                int bytesToWrite = (int)Math.Min(64 * 1024 * 1024, remaining);
-                sourceFile.Read(buffer, 0, bytesToWrite);
-                cs.Append(buffer, 0, bytesToWrite);
-                offset += bytesToWrite;
-            }
-            // make sure always use Flush() after all Append() complete
-            // Flush() add checksum to end and finish streaming operation.
-            cs.Flush();
-        }
-    }
+    int bytesToRead = (int)Math.Min(buffer.Length, sourceFile.Length - offset);
+    int bytesRead = sourceFile.Read(buffer, 0, bytesToRead);
+    cs.Append(buffer, 0, bytesRead);
+    offset += bytesRead;
 }
+// Flush() writes the end checksum and finalises the stream.
+cs.Flush();
 ```
 
-**Streaming Decompression**
-``` c#
-//large file streaming decompress(>2GB)
-using (FileStream recoveryStream = File.OpenWrite(DecompressedFilePath))
-{
-    using (FileStream compressedFile = File.OpenRead(CompressedFilePath))
-    {
-        using (DecompressStream ds = new DecompressStream(compressedFile))
-        {
-            ds.CopyTo(recoveryStream);
-        }
-    }
-}
+**Decompress**
+
+```csharp
+using FileStream recoveryFile   = File.OpenWrite(decompressedFilePath);
+using FileStream compressedFile = File.OpenRead(compressedFilePath);
+using DecompressStream ds = new(compressedFile);
+ds.CopyTo(recoveryFile);
 ```
 
-### Finetune Parameter
+### Fine-tune compression parameters
 
-``` c#
-Compressor compressor = new(0) { CompressLevel = 10 };
+```csharp
+using Compressor compressor = new(nbThreads: 0) { CompressLevel = 10 };
 compressor.SetParameter(FL2Parameter.FastLength, 48);
+compressor.SetParameter(FL2Parameter.SearchDepth, 60);
 ```
 
-### Estimate Memory Usage 
+### Estimate memory usage
 
-``` c# 
-Compressor compressor = new(0) { CompressLevel = 10 };
+```csharp
+// By compression level and thread count
+nuint size = FL2.EstimateCompressMemoryUsage(compressionLevel: 10, nbThreads: 8);
+
+// Using an existing context's settings
+using Compressor compressor = new(nbThreads: 4) { CompressLevel = 10 };
 nuint size = FL2.EstimateCompressMemoryUsage(compressor.ContextPtr);
-size = EstimateCompressMemoryUsage(compressionLevel=10,nbThreads=8)
 ```
 
-### Find Decompressed Data Size
+### Find decompressed size
 
-``` c#
-nuint size = FL2.FindDecompressedSize(data);
+```csharp
+// From a byte array
+nuint size = FL2.FindDecompressedSize(compressedData);
+
+// From a file path (uses memory-mapped I/O — no full read into memory)
+nuint size = FL2.FindDecompressedSize(compressedFilePath);
 ```
 
 # Bug report 

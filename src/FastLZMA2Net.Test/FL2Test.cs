@@ -36,9 +36,9 @@ namespace Test
         {
             byte[] data = File.ReadAllBytes("Resources/dummy.fl2");
             nuint code = FL2.FindDecompressedSize(data);
-            Assert.AreEqual((long)code, 581048);
+            Assert.AreEqual(581048, (long)code);
             code = FL2.FindDecompressedSize("Resources/dummy.fl2");
-            Assert.AreEqual((long)code, 581048);
+            Assert.AreEqual(581048, (long)code);
         }
 
         [TestMethod]
@@ -54,12 +54,12 @@ namespace Test
             {
                 parameters = FL2.GetPresetLevelParameters(-1, 0);
             });
-            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.ParameterOutOfBound);
+            Assert.AreEqual(FL2ErrorCode.ParameterOutOfBound, exception.ErrorCode);
             exception = Assert.ThrowsExactly<FL2Exception>(() =>
             {
                 parameters = FL2.GetPresetLevelParameters(11, 0);
             });
-            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.ParameterOutOfBound);
+            Assert.AreEqual(FL2ErrorCode.ParameterOutOfBound, exception.ErrorCode);
             Console.WriteLine($"Max Level{FL2.CompressionLevelMax}");
             Console.WriteLine($"Max High Level{FL2.HighCompressionLevelMax}");
         }

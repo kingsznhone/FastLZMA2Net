@@ -25,7 +25,7 @@
         /// <summary>
         /// Initialize new decompress context
         /// </summary>
-        /// <param name="nbThreads"></param>
+        /// <param name="nbThreads">Number of threads to use; 0 auto-selects all cores, 1 uses a single-threaded context.</param>
         public Decompressor(uint nbThreads = 0)
         {
             if (nbThreads == 1)
@@ -41,9 +41,9 @@
         }
 
         /// <summary>
-        /// Initial new context with specific dict size property
+        /// Initializes the decompression context with the given dictionary size property byte.
         /// </summary>
-        /// <param name="prop">dictSizeProperty</param>
+        /// <param name="prop">Dictionary size property byte, as stored in the compressed stream header.</param>
         public void Init(byte prop)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
@@ -74,6 +74,8 @@
         /// Decompresses data from a <see cref="ReadOnlySpan{T}"/> source. Avoids a copy when the caller
         /// already holds data in a pooled or stack-allocated buffer.
         /// </summary>
+        /// <param name="data">Compressed data.</param>
+        /// <returns>Raw data.</returns>
         public byte[] Decompress(ReadOnlySpan<byte> data)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
@@ -91,6 +93,9 @@
         /// Decompresses data asynchronously.
         /// This is CPU-bound work dispatched to the thread pool; cancellation prevents the task from starting.
         /// </summary>
+        /// <param name="data">Compressed data.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Raw data.</returns>
         public Task<byte[]> DecompressAsync(byte[] data, CancellationToken cancellationToken = default)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
@@ -102,12 +107,19 @@
         /// Decompresses data asynchronously from a <see cref="ReadOnlyMemory{T}"/> source.
         /// This is CPU-bound work dispatched to the thread pool; cancellation prevents the task from starting.
         /// </summary>
+        /// <param name="data">Compressed data.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Raw data.</returns>
         public Task<byte[]> DecompressAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
             return Task.Run(() => Decompress(data.Span), cancellationToken);
         }
 
+        /// <summary>
+        /// Releases the unmanaged decompression context.
+        /// </summary>
+        /// <param name="disposing">True when managed resources are also being released.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposed)
@@ -118,11 +130,17 @@
             }
         }
 
+        /// <summary>
+        /// Finalizes the decompressor if <see cref="Dispose()" /> was not called.
+        /// </summary>
         ~Decompressor()
         {
             Dispose(disposing: false);
         }
 
+        /// <summary>
+        /// Releases the decompression context and suppresses finalization.
+        /// </summary>
         public void Dispose()
         {
             Dispose(disposing: true);

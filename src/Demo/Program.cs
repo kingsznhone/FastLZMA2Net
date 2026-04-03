@@ -6,6 +6,7 @@ namespace Demo
     {
         private static async Task Main(string[] args)
         {
+            Console.WriteLine("FL2 Version: " + FL2.VersionString);
             string SourceFilePath = @"D:\dummy.tar";
             string CompressedFilePath = @"D:\dummy.tar.fl2";
             string DecompressedFilePath = @"D:\dummy.recovery.tar";

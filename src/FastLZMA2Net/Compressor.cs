@@ -16,7 +16,7 @@ namespace FastLZMA2Net
         private bool disposed;
 
         /// <summary>
-        /// Thread use of the context
+        /// Gets the number of threads used by the compression context.
         /// </summary>
         public uint ThreadCount
         {
@@ -28,7 +28,7 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Dictionary size property
+        /// Gets the encoded dictionary size property byte stored in the compressed stream header.
         /// </summary>
         public byte DictSizeProperty
         {
@@ -49,7 +49,8 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Levels 1..10 Setting to 1 switches to an alternate cLevel table.
+        /// Maximizes compression ratio for a given dictionary size. Levels 1..10 map dictionaryLog 20..29 (1 MB..512 MB).
+        /// Setting to 0 disables high-compression mode.
         /// </summary>
         public int HighCompressLevel
         {
@@ -58,7 +59,7 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Dictionary size with FL2.DictSizeMin & FL2.DictSizeMax
+        /// Dictionary size with FL2.DictSizeMin and FL2.DictSizeMax
         /// </summary>
         public int DictionarySize
         {
@@ -92,8 +93,8 @@ namespace FastLZMA2Net
         /// <summary>
         /// Initialize new compress context
         /// </summary>
-        /// <param name="nbThreads">How many thread use. auto = 0</param>
-        /// <param name="compressLevel">default = 6</param>
+        /// <param name="nbThreads">Number of threads to use; 0 auto-selects all cores.</param>
+        /// <param name="compressLevel">Initial compression level (1–10, default 6).</param>
         public Compressor(uint nbThreads = 0, int compressLevel = 6)
         {
             _context = NativeMethods.FL2_createCCtxMt(nbThreads);
@@ -106,6 +107,9 @@ namespace FastLZMA2Net
         /// Compresses data asynchronously using the current compression level.
         /// This is CPU-bound work dispatched to the thread pool; cancellation prevents the task from starting.
         /// </summary>
+        /// <param name="src">Source data.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The compressed byte array.</returns>
         public Task<byte[]> CompressAsync(byte[] src, CancellationToken cancellationToken = default)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
@@ -116,6 +120,10 @@ namespace FastLZMA2Net
         /// Compresses data asynchronously with the specified compression level.
         /// This is CPU-bound work dispatched to the thread pool; cancellation prevents the task from starting.
         /// </summary>
+        /// <param name="src">Source data.</param>
+        /// <param name="compressLevel">Compression level to use.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The compressed byte array.</returns>
         public Task<byte[]> CompressAsync(byte[] src, int compressLevel, CancellationToken cancellationToken = default)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
@@ -126,6 +134,9 @@ namespace FastLZMA2Net
         /// Compresses data asynchronously from a <see cref="ReadOnlyMemory{T}"/> source.
         /// This is CPU-bound work dispatched to the thread pool; cancellation prevents the task from starting.
         /// </summary>
+        /// <param name="src">Source data.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The compressed byte array.</returns>
         public Task<byte[]> CompressAsync(ReadOnlyMemory<byte> src, CancellationToken cancellationToken = default)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
@@ -135,6 +146,8 @@ namespace FastLZMA2Net
         /// <summary>
         /// Compresses data using the current compression level.
         /// </summary>
+        /// <param name="src">Source data.</param>
+        /// <returns>The compressed byte array.</returns>
         public byte[] Compress(byte[] src)
         {
             return Compress(src, 0);
@@ -146,7 +159,7 @@ namespace FastLZMA2Net
         /// <param name="src">Data byte array</param>
         /// <param name="compressLevel">compress level</param>
         /// <returns>Bytes Compressed</returns>
-        /// <exception cref="FL2Exception"></exception>
+        /// <exception cref="FL2Exception">Thrown when compression fails.</exception>
         public byte[] Compress(byte[] src, int compressLevel)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
@@ -173,6 +186,9 @@ namespace FastLZMA2Net
         /// Compresses data from a <see cref="ReadOnlySpan{T}"/> source. Avoids a copy when the caller
         /// already holds data in a pooled or stack-allocated buffer.
         /// </summary>
+        /// <param name="src">Source data.</param>
+        /// <param name="compressLevel">Compression level to use, or 0 to use the current setting.</param>
+        /// <returns>The compressed byte array.</returns>
         public byte[] Compress(ReadOnlySpan<byte> src, int compressLevel = 0)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
@@ -205,20 +221,20 @@ namespace FastLZMA2Net
             ArgumentException.ThrowIfNullOrWhiteSpace(srcPath);
             ArgumentException.ThrowIfNullOrWhiteSpace(dstPath);
             nuint code;
-            FileInfo sourceFile = new FileInfo(srcPath);
-            FileInfo destFile = new FileInfo(dstPath);
+            FileInfo sourceFile = new(srcPath);
+            FileInfo destFile = new(dstPath);
             if (destFile.Exists)
             {
                 destFile.Delete();
             }
-            using (DirectFileAccessor accessorSrc = new DirectFileAccessor(sourceFile.FullName, FileMode.Open, null, sourceFile.Length, MemoryMappedFileAccess.Read))
+            using (DirectFileAccessor accessorSrc = new(sourceFile.FullName, FileMode.Open, null, sourceFile.Length, MemoryMappedFileAccess.Read))
             {
                 code = NativeMethods.FL2_compressBound((nuint)sourceFile.Length);
                 if (FL2Exception.IsError(code))
                 {
                     throw new FL2Exception(code);
                 }
-                using (DirectFileAccessor accessorDst = new DirectFileAccessor(destFile.FullName, FileMode.OpenOrCreate, null, sourceFile.Length, MemoryMappedFileAccess.ReadWrite))
+                using (DirectFileAccessor accessorDst = new(destFile.FullName, FileMode.OpenOrCreate, null, sourceFile.Length, MemoryMappedFileAccess.ReadWrite))
                 {
                     code = NativeMethods.FL2_compressCCtx(_context, accessorDst.AsSpan(), code, accessorSrc.AsReadOnlySpan(), (nuint)sourceFile.Length, CompressLevel);
                     if (FL2Exception.IsError(code))
@@ -239,8 +255,8 @@ namespace FastLZMA2Net
         /// Set detail compress parameter
         /// </summary>
         /// <param name="param"> Parameter Enum</param>
-        /// <param name="value"></param>
-        /// <returns>Error Code</returns>
+        /// <param name="value">The value to assign to the parameter.</param>
+        /// <returns>The raw native return value (0 on success); throws <see cref="FL2Exception"/> on error.</returns>
         /// <exception cref="FL2Exception"></exception>
         public nuint SetParameter(FL2Parameter param, nuint value)
         {
@@ -270,6 +286,10 @@ namespace FastLZMA2Net
             return code;
         }
 
+        /// <summary>
+        /// Releases the unmanaged compression context.
+        /// </summary>
+        /// <param name="disposing">True when managed resources are also being released.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposed)
@@ -280,11 +300,17 @@ namespace FastLZMA2Net
             }
         }
 
+        /// <summary>
+        /// Finalizes the compressor if <see cref="Dispose()" /> was not called.
+        /// </summary>
         ~Compressor()
         {
             Dispose(disposing: false);
         }
 
+        /// <summary>
+        /// Releases the compression context and suppresses finalization.
+        /// </summary>
         public void Dispose()
         {
             Dispose(disposing: true);

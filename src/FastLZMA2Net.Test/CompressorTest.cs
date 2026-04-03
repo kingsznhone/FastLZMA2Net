@@ -64,19 +64,21 @@ namespace Test
         [TestMethod]
         public void SetDictSize()
         {
-            Compressor compressorST = new Compressor();
-            compressorST.DictionarySize = FL2.DictSizeMin;
+            Compressor compressorST = new()
+            {
+                DictionarySize = FL2.DictSizeMin
+            };
             compressorST.DictionarySize = FL2.DictSizeMax;
             var exception = Assert.ThrowsExactly<FL2Exception>(() =>
             {
                 compressorST.DictionarySize = FL2.DictSizeMin >> 1;
             });
-            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.ParameterOutOfBound);
+            Assert.AreEqual(FL2ErrorCode.ParameterOutOfBound, exception.ErrorCode);
             exception = Assert.ThrowsExactly<FL2Exception>(() =>
             {
                 compressorST.DictionarySize = FL2.DictSizeMax << 1;
             });
-            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.ParameterOutOfBound);
+            Assert.AreEqual(FL2ErrorCode.ParameterOutOfBound, exception.ErrorCode);
         }
 
         [TestMethod]
@@ -92,17 +94,17 @@ namespace Test
             {
                 compressorST.CompressLevel = -1;
             });
-            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.ParameterOutOfBound);
+            Assert.AreEqual(FL2ErrorCode.ParameterOutOfBound, exception.ErrorCode);
             exception = Assert.ThrowsExactly<FL2Exception>(() =>
             {
                 compressorST.CompressLevel = 0;
             });
-            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.ParameterOutOfBound);
+            Assert.AreEqual(FL2ErrorCode.ParameterOutOfBound, exception.ErrorCode);
             exception = Assert.ThrowsExactly<FL2Exception>(() =>
             {
                 compressorST.CompressLevel = 11;
             });
-            Assert.AreEqual(exception.ErrorCode, FL2ErrorCode.ParameterOutOfBound);
+            Assert.AreEqual(FL2ErrorCode.ParameterOutOfBound, exception.ErrorCode);
         }
 
         [TestMethod]

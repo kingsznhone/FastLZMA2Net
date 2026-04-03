@@ -11,19 +11,31 @@ namespace FastLZMA2Net
         private byte[] outputBufferArray;
         private FL2OutBuffer outBuffer;
 
-        private bool disposed = false;
+        private bool disposed;
         private readonly Stream _innerStream;
         private readonly nint _context;
         internal nint ContextPtr => _context;
+        /// <summary>
+        /// Gets whether the stream can be read.
+        /// </summary>
         public override bool CanRead => false;
+        /// <summary>
+        /// Gets whether the stream can be written to.
+        /// </summary>
         public override bool CanWrite => !disposed;
+        /// <summary>
+        /// Gets whether the stream supports seeking.
+        /// </summary>
         public override bool CanSeek => false;
 
         /// <summary>
-        /// Can't determine decompressed data size
+        /// Compressed output size is not available before the stream is finalized.
         /// </summary>
         public override long Length => throw new NotSupportedException();
 
+        /// <summary>
+        /// Gets or sets the current position in the stream.
+        /// </summary>
         public override long Position
         {
             get => throw new NotSupportedException();
@@ -49,7 +61,7 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Dictionary size with FL2.DictSizeMin & FL2.DictSizeMax
+        /// Dictionary size with FL2.DictSizeMin and FL2.DictSizeMax
         /// </summary>
         public int DictionarySize
         {
@@ -84,7 +96,7 @@ namespace FastLZMA2Net
         /// Initialize streaming compress context
         /// </summary>
         /// <param name="dstStream">compressed data store</param>
-        /// <param name="nbThreads">thread use, auto = 0</param>
+        /// <param name="nbThreads">Number of threads to use; 0 auto-selects all cores.</param>
         /// <param name="outBufferSize">Native interop buffer size, default = 64M</param>
         /// <exception cref="FL2Exception"></exception>
         public CompressStream(Stream dstStream, uint nbThreads = 0, nint outBufferSize = 64 * 1024 * 1024)
@@ -158,7 +170,7 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Start compression and finish stream asynchronized.
+        /// Start compression and finish stream asynchronously.
         /// </summary>
         /// <param name="buffer">Raw data</param>
         /// <param name="offset">Start index in buffer</param>
@@ -173,7 +185,7 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Start compression and finish stream asynchronized.
+        /// Start compression and finish stream asynchronously.
         /// </summary>
         /// <param name="buffer">Raw data</param>
         /// <param name="cancellationToken"></param>
@@ -189,7 +201,7 @@ namespace FastLZMA2Net
             ref byte ref_buffer = ref MemoryMarshal.GetReference(buffer);
             fixed (byte* pBuffer = &ref_buffer)
             {
-                FL2InBuffer inBuffer = new FL2InBuffer()
+                FL2InBuffer inBuffer = new()
                 {
                     src = (nint)pBuffer,
                     size = (nuint)buffer.Length,
@@ -374,11 +386,35 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
+        /// Asynchronously writes the checksum and finalizes the compress stream.
+        /// </summary>
+        /// <exception cref="FL2Exception"></exception>
+        public override async Task FlushAsync(CancellationToken cancellationToken)
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            var code = NativeMethods.FL2_endStream(_context, ref outBuffer);
+            if (FL2Exception.IsError(code))
+            {
+                if (FL2Exception.GetErrorCode(code) != FL2ErrorCode.Buffer)
+                {
+                    throw new FL2Exception(code);
+                }
+            }
+            await _innerStream.WriteAsync(outputBufferArray.AsMemory(0, (int)outBuffer.pos), cancellationToken).ConfigureAwait(false);
+            //prepare for next mission
+            code = NativeMethods.FL2_initCStream(_context, 0);
+            if (FL2Exception.IsError(code))
+            {
+                throw new FL2Exception(code);
+            }
+        }
+
+        /// <summary>
         /// Set detail compress parameter
         /// </summary>
         /// <param name="param"> Parameter Enum</param>
-        /// <param name="value"></param>
-        /// <returns>Error Code</returns>
+        /// <param name="value">The value to assign to the parameter.</param>
+        /// <returns>The raw native return value (0 on success); throws <see cref="FL2Exception"/> on error.</returns>
         /// <exception cref="FL2Exception"></exception>
         public nuint SetParameter(FL2Parameter param, nuint value)
         {
@@ -408,6 +444,10 @@ namespace FastLZMA2Net
             return code;
         }
 
+        /// <summary>
+        /// Releases the compression stream resources.
+        /// </summary>
+        /// <param name="disposing">True when managed resources are also being released.</param>
         protected override void Dispose(bool disposing)
         {
             if (!disposed)
@@ -421,6 +461,7 @@ namespace FastLZMA2Net
                     NativeMethods.FL2_freeCStream(_context);
                 disposed = true;
             }
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -432,7 +473,7 @@ namespace FastLZMA2Net
             {
                 try
                 {
-                    Flush();
+                    await FlushAsync(CancellationToken.None).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -445,6 +486,9 @@ namespace FastLZMA2Net
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Finalizes the compression stream if it was not disposed.
+        /// </summary>
         ~CompressStream()
         {
             Dispose(disposing: false);

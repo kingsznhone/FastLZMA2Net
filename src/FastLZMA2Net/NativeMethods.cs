@@ -245,7 +245,6 @@ namespace FastLZMA2Net
         /// <summary>
         /// maximum compression level available
         /// </summary>
-        /// <param name=""></param>
         /// <returns></returns>
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -256,7 +255,6 @@ namespace FastLZMA2Net
         /// <summary>
         /// maximum compression level available in high mode
         /// </summary>
-        /// <param name=""></param>
         /// <returns></returns>
         [LibraryImport(LibraryName, StringMarshalling = StringMarshalling.Utf16)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

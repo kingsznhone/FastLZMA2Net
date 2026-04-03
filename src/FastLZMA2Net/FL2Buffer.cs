@@ -13,7 +13,7 @@
         public nuint size;
 
         /// <summary>
-        /// position where reading stopped. Will be updated. Necessarily 0 <= pos <= size
+        /// position where reading stopped. Will be updated. Necessarily 0 &lt;= pos &lt;= size
         /// </summary>
         public nuint pos;
     }
@@ -31,7 +31,7 @@
         public nuint size;
 
         /// <summary>
-        /// position where writing stopped. Will be updated. Necessarily 0 <= pos <= size
+        /// position where writing stopped. Will be updated. Necessarily 0 &lt;= pos &lt;= size
         /// </summary>
         public nuint pos;
     }

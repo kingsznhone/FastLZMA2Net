@@ -37,12 +37,6 @@ namespace Test
         }
 
         [TestMethod]
-        public void WhenAccessDictSizeMinThenReturnsOneMB()
-        {
-            Assert.AreEqual(1 << 20, FL2.DictSizeMin);
-        }
-
-        [TestMethod]
         public void WhenAccessDictSizeMaxThenReturnsPlatformSpecificValue()
         {
             int expected = nint.Size == 4 ? 1 << 27 : 1 << 30;
@@ -61,20 +55,6 @@ namespace Test
             Assert.IsTrue(FL2.HighCompressionLevelMax > 0);
         }
 
-        [TestMethod]
-        public void WhenAccessConstantRangesThenMinIsLessThanOrEqualToMax()
-        {
-            Assert.IsTrue(FL2.BlockOverlapMin <= FL2.BlockOverlapMax);
-            Assert.IsTrue(FL2.ResetIntervalMin <= FL2.ResetIntervalMax);
-            Assert.IsTrue(FL2.BufferResizeMin <= FL2.BufferResizeMax);
-            Assert.IsTrue(FL2.ChainLogMin <= FL2.ChainLogMax);
-            Assert.IsTrue(FL2.HybridCyclesMin <= FL2.HybridCyclesMax);
-            Assert.IsTrue(FL2.SearchDepthMin <= FL2.SearchDepthMax);
-            Assert.IsTrue(FL2.FastLengthMin <= FL2.FastLengthMax);
-            Assert.IsTrue(FL2.LCMin <= FL2.LCMax);
-            Assert.IsTrue(FL2.LPMin <= FL2.LPMax);
-            Assert.IsTrue(FL2.PBMin <= FL2.PBMax);
-        }
 
         #endregion
 

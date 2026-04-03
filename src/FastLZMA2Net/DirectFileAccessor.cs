@@ -2,7 +2,7 @@
 
 namespace FastLZMA2Net
 {
-    internal unsafe class DirectFileAccessor : IDisposable
+    internal unsafe sealed class DirectFileAccessor : IDisposable
     {
         private readonly MemoryMappedFile _mmFile;
         private readonly MemoryMappedViewAccessor _accessor;
@@ -15,7 +15,7 @@ namespace FastLZMA2Net
         public DirectFileAccessor(string path, FileMode mode, string? mapName, long capacity, MemoryMappedFileAccess access)
         {
             var fileInfo = new FileInfo(path);
-            _mmFile = MemoryMappedFile.CreateFromFile(path, mode, null, capacity, access);
+            _mmFile = MemoryMappedFile.CreateFromFile(path, mode, mapName, capacity, access);
             _accessor = _mmFile.CreateViewAccessor(0, 0, access);
             _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref _mmPtr);
             Length = capacity;
@@ -34,7 +34,7 @@ namespace FastLZMA2Net
 
         public void Close() => Dispose(true);
 
-        protected virtual void Dispose(bool disposing)
+        public void Dispose(bool disposing)
         {
             if (!disposed)
             {
