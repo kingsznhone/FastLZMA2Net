@@ -12,6 +12,8 @@ namespace FastLZMA2Net
         private FL2OutBuffer outBuffer;
 
         private bool disposed;
+        private bool _initialized;
+        private bool _ended;
         private readonly Stream _innerStream;
         private readonly nint _context;
         internal nint ContextPtr => _context;
@@ -109,11 +111,6 @@ namespace FastLZMA2Net
             _context = NativeMethods.FL2_createCStreamMt(nbThreads, 1);
             if (_context == IntPtr.Zero)
                 throw new FL2Exception(FL2ErrorCode.MemoryAllocation);
-            var code = NativeMethods.FL2_initCStream(_context, 0);
-            if (FL2Exception.IsError(code))
-            {
-                throw new FL2Exception(code);
-            }
 
             // Compressed stream output buffer
             outputBufferArray = GC.AllocateArray<byte>((int)bufferSize, pinned: true);
@@ -198,6 +195,7 @@ namespace FastLZMA2Net
 
         private unsafe int CompressCore(ReadOnlySpan<byte> buffer, bool Appending, CancellationToken cancellationToken = default)
         {
+            EnsureInitialized();
             ref byte ref_buffer = ref MemoryMarshal.GetReference(buffer);
             fixed (byte* pBuffer = &ref_buffer)
             {
@@ -251,33 +249,14 @@ namespace FastLZMA2Net
                     return 0;
                 }
 
-                // receive all remaining compressed data for safety
-                do
-                {
-                    outBuffer.pos = 0;
-                    //Returns 1 if input or output still exists in the CStream object, 0 if complete,
-                    code = NativeMethods.FL2_flushStream(_context, ref outBuffer);
-                    if (FL2Exception.IsError(code))
-                    {
-                        if (FL2Exception.GetErrorCode(code) != FL2ErrorCode.Buffer)
-                        {
-                            throw new FL2Exception(code);
-                        }
-                    }
-                    _innerStream.Write(outputBufferArray, 0, (int)outBuffer.pos);
-                } while (!cancellationToken.IsCancellationRequested && outBuffer.pos != 0);
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    NativeMethods.FL2_cancelCStream(_context);
-                    return 0;
-                }
-
                 //Write compress checksum if not appending mode
                 if (!Appending)
                 {
-                    code = NativeMethods.FL2_endStream(_context, ref outBuffer);
-                    if (FL2Exception.IsError(code))
+                    // Flush remaining dictionary data and write stream end marker
+                    do
                     {
+                        outBuffer.pos = 0;
+                        code = NativeMethods.FL2_endStream(_context, ref outBuffer);
                         if (FL2Exception.IsError(code))
                         {
                             if (FL2Exception.GetErrorCode(code) != FL2ErrorCode.Buffer)
@@ -285,14 +264,16 @@ namespace FastLZMA2Net
                                 throw new FL2Exception(code);
                             }
                         }
-                    }
-                    _innerStream.Write(outputBufferArray, 0, (int)outBuffer.pos);
-                    //reset for next mission
-                    code = NativeMethods.FL2_initCStream(_context, 0);
-                    if (FL2Exception.IsError(code))
+                        _innerStream.Write(outputBufferArray, 0, (int)outBuffer.pos);
+                    } while (!cancellationToken.IsCancellationRequested && outBuffer.pos != 0);
+                    if (cancellationToken.IsCancellationRequested)
                     {
-                        throw new FL2Exception(code);
+                        NativeMethods.FL2_cancelCStream(_context);
+                        return 0;
                     }
+                    //reset for next mission
+                    _ended = true;
+                    _initialized = false;
                 }
             }
             return 0;
@@ -368,21 +349,25 @@ namespace FastLZMA2Net
         public override void Flush()
         {
             ObjectDisposedException.ThrowIf(disposed, this);
-            var code = NativeMethods.FL2_endStream(_context, ref outBuffer);
-            if (FL2Exception.IsError(code))
+            if (_ended) return;
+            EnsureInitialized();
+            nuint code;
+            do
             {
-                if (FL2Exception.GetErrorCode(code) != FL2ErrorCode.Buffer)
+                outBuffer.pos = 0;
+                code = NativeMethods.FL2_endStream(_context, ref outBuffer);
+                if (FL2Exception.IsError(code))
                 {
-                    throw new FL2Exception(code);
+                    if (FL2Exception.GetErrorCode(code) != FL2ErrorCode.Buffer)
+                    {
+                        throw new FL2Exception(code);
+                    }
                 }
-            }
-            _innerStream.Write(outputBufferArray, 0, (int)outBuffer.pos);
+                _innerStream.Write(outputBufferArray, 0, (int)outBuffer.pos);
+            } while (outBuffer.pos != 0);
             //prepare for next mission
-            code = NativeMethods.FL2_initCStream(_context, 0);
-            if (FL2Exception.IsError(code))
-            {
-                throw new FL2Exception(code);
-            }
+            _ended = true;
+            _initialized = false;
         }
 
         /// <summary>
@@ -392,20 +377,38 @@ namespace FastLZMA2Net
         public override async Task FlushAsync(CancellationToken cancellationToken)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
-            var code = NativeMethods.FL2_endStream(_context, ref outBuffer);
-            if (FL2Exception.IsError(code))
+            if (_ended) return;
+            EnsureInitialized();
+            nuint code;
+            do
             {
-                if (FL2Exception.GetErrorCode(code) != FL2ErrorCode.Buffer)
+                outBuffer.pos = 0;
+                code = NativeMethods.FL2_endStream(_context, ref outBuffer);
+                if (FL2Exception.IsError(code))
+                {
+                    if (FL2Exception.GetErrorCode(code) != FL2ErrorCode.Buffer)
+                    {
+                        throw new FL2Exception(code);
+                    }
+                }
+                await _innerStream.WriteAsync(outputBufferArray.AsMemory(0, (int)outBuffer.pos), cancellationToken).ConfigureAwait(false);
+            } while (outBuffer.pos != 0);
+            //prepare for next mission
+            _ended = true;
+            _initialized = false;
+        }
+
+        private void EnsureInitialized()
+        {
+            if (!_initialized)
+            {
+                var code = NativeMethods.FL2_initCStream(_context, 0);
+                if (FL2Exception.IsError(code))
                 {
                     throw new FL2Exception(code);
                 }
-            }
-            await _innerStream.WriteAsync(outputBufferArray.AsMemory(0, (int)outBuffer.pos), cancellationToken).ConfigureAwait(false);
-            //prepare for next mission
-            code = NativeMethods.FL2_initCStream(_context, 0);
-            if (FL2Exception.IsError(code))
-            {
-                throw new FL2Exception(code);
+                _initialized = true;
+                _ended = false;
             }
         }
 

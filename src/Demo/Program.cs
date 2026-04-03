@@ -1,4 +1,5 @@
-﻿using FastLZMA2Net;
+﻿using System.Diagnostics;
+using FastLZMA2Net;
 
 namespace Demo
 {
@@ -20,12 +21,9 @@ namespace Demo
             compressor.CompressLevel = 10;
             FL2.EstimateCompressMemoryUsage(compressor.CompressLevel, compressor.ThreadCount);
             compressed = compressor.Compress(origin);
-            compressed = compressor.Compress(origin);
-            compressed = compressor.Compress(origin);
+            Console.WriteLine($"{compressed.Length} compressed");
 
             Decompressor decompressor = new Decompressor();
-            decompressed = decompressor.Decompress(compressed);
-            decompressed = decompressor.Decompress(compressed);
             decompressed = decompressor.Decompress(compressed);
 
             // Streaming Compression
@@ -43,10 +41,14 @@ namespace Demo
             }
 
             //large file streaming compression using Direct file access(>2GB)
-            using (FileStream compressedFile = File.OpenWrite(CompressedFilePath))
+            long sourceFileSize = new FileInfo(SourceFilePath).Length;
+            Stopwatch swCompress = Stopwatch.StartNew();
+            using (FileStream compressedFile = File.Create(CompressedFilePath))
             {
                 using (CompressStream cs = new CompressStream(compressedFile))
                 {
+                    cs.CompressLevel = 10;
+                    cs.HighCompressLevel = 10;
                     using (FileStream sourceFile = File.OpenRead(SourceFilePath))
                     {
                         //DO NOT USE sourceFile.CopyTo(cs)
@@ -60,15 +62,18 @@ namespace Demo
                             cs.Append(buffer, 0, bytesToWrite);
                             offset += bytesToWrite;
                         }
-                        // make sure always use Flush() after Append()
-                        //Flush() add checksum to stream and finish streaming.
-                        cs.Flush();
+                        // Flush() is called automatically by Dispose()
                     }
                 }
             }
+            swCompress.Stop();
+            double compressSeconds = swCompress.Elapsed.TotalSeconds;
+            double compressSpeedMBps = sourceFileSize / 1024.0 / 1024.0 / compressSeconds;
+            Console.WriteLine($"Streaming compression finished: {compressSeconds:F2}s, {compressSpeedMBps:F2} MB/s");
 
             //large file streaming decompress(>2GB)
-            using (FileStream recoveryStream = File.OpenWrite(DecompressedFilePath))
+            Stopwatch swDecompress = Stopwatch.StartNew();
+            using (FileStream recoveryStream = File.Create(DecompressedFilePath))
             {
                 using (FileStream compressedFile = File.OpenRead(CompressedFilePath))
                 {
@@ -78,6 +83,10 @@ namespace Demo
                     }
                 }
             }
+            swDecompress.Stop();
+            double decompressSeconds = swDecompress.Elapsed.TotalSeconds;
+            double decompressSpeedMBps = sourceFileSize / 1024.0 / 1024.0 / decompressSeconds;
+            Console.WriteLine($"Streaming decompression finished: {decompressSeconds:F2}s, {decompressSpeedMBps:F2} MB/s");
         }
     }
 }

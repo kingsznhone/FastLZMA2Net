@@ -117,37 +117,41 @@ byte[] decompressed = recoveryStream.ToArray();
 
 ### Streaming Compression — large files (> 2 GB)
 
-.NET byte arrays are limited to ~2 GB. For larger payloads use streaming with `Append` + `Flush`.
+.NET byte arrays are limited to ~2 GB. For larger payloads use streaming with `Append`.
+
+> **`Write()` vs `Append()`** — `Write()` finalises the stream after a single call.
+> Use `Append()` to feed data in chunks; the stream is automatically finalised when `Dispose()` is called (i.e. at the end of a `using` block). You may also call `Flush()` explicitly, but it is not required.
 
 **Compress**
 
 ```csharp
 byte[] buffer = new byte[64 * 1024 * 1024]; // 64 MB read buffer
 
-using FileStream compressedFile = File.OpenWrite(compressedFilePath);
-using CompressStream cs = new(compressedFile);
-using FileStream sourceFile = File.OpenRead(sourceFilePath);
-
-// Use Append() to feed chunks; Write() finalises the stream after one call.
-long offset = 0;
-while (offset < sourceFile.Length)
+using FileStream sourceFile     = File.OpenRead(sourceFilePath);
+using FileStream compressedFile = File.Create(compressedFilePath);
+using (CompressStream cs = new(compressedFile))
 {
-    int bytesToRead = (int)Math.Min(buffer.Length, sourceFile.Length - offset);
-    int bytesRead = sourceFile.Read(buffer, 0, bytesToRead);
-    cs.Append(buffer, 0, bytesRead);
-    offset += bytesRead;
-}
-// Flush() writes the end checksum and finalises the stream.
-cs.Flush();
+    cs.CompressLevel = 10;
+    long offset = 0;
+    while (offset < sourceFile.Length)
+    {
+        int bytesToRead = (int)Math.Min(buffer.Length, sourceFile.Length - offset);
+        int bytesRead   = sourceFile.Read(buffer, 0, bytesToRead);
+        cs.Append(buffer, 0, bytesRead);
+        offset += bytesRead;
+    }
+}   // Dispose() automatically finalises the stream and writes the end checksum.
 ```
 
 **Decompress**
 
 ```csharp
-using FileStream recoveryFile   = File.OpenWrite(decompressedFilePath);
 using FileStream compressedFile = File.OpenRead(compressedFilePath);
-using DecompressStream ds = new(compressedFile);
-ds.CopyTo(recoveryFile);
+using FileStream recoveryFile   = File.Create(decompressedFilePath);
+using (DecompressStream ds = new(compressedFile))
+{
+    ds.CopyTo(recoveryFile);
+}
 ```
 
 ### Fine-tune compression parameters
