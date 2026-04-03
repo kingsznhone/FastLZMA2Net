@@ -15,22 +15,27 @@ namespace FastLZMA2Net
         /// </summary>
         public static readonly Version Version =
             typeof(FL2).Assembly.GetName().Version!;
+
         /// <summary>
         /// Gets the version as a numeric code.
         /// </summary>
         public static int VersionNumber => Version.Major * 100 * 100 + Version.Minor * 100 + Version.Build;
+
         /// <summary>
         /// Gets the version as a dotted string.
         /// </summary>
         public static string VersionString => $"{Version.Major}.{Version.Minor}.{Version.Build}";
+
         /// <summary>
         /// Gets the maximum supported thread count.
         /// </summary>
         public const int MaxThreads = 200;
+
         /// <summary>
         /// Gets the minimum supported dictionary size in bytes.
         /// </summary>
         public const int DictSizeMin = 1 << 20;
+
         /// <summary>
         /// Gets the maximum supported dictionary size in bytes.
         /// </summary>
@@ -40,6 +45,7 @@ namespace FastLZMA2Net
         /// Gets the minimum supported block overlap.
         /// </summary>
         public const int BlockOverlapMin = 0;
+
         /// <summary>
         /// Gets the maximum supported block overlap.
         /// </summary>
@@ -49,6 +55,7 @@ namespace FastLZMA2Net
         /// Gets the minimum supported reset interval.
         /// </summary>
         public const int ResetIntervalMin = 1;
+
         /// <summary>
         /// Gets the maximum supported reset interval.
         /// </summary>
@@ -58,10 +65,12 @@ namespace FastLZMA2Net
         /// Gets the minimum supported buffer resize value.
         /// </summary>
         public const int BufferResizeMin = 0;
+
         /// <summary>
         /// Gets the maximum supported buffer resize value.
         /// </summary>
         public const int BufferResizeMax = 4;
+
         /// <summary>
         /// Gets the default buffer resize value.
         /// </summary>
@@ -71,6 +80,7 @@ namespace FastLZMA2Net
         /// Gets the minimum supported chain log.
         /// </summary>
         public const int ChainLogMin = 4;
+
         /// <summary>
         /// Gets the maximum supported chain log.
         /// </summary>
@@ -80,6 +90,7 @@ namespace FastLZMA2Net
         /// Gets the minimum supported hybrid cycle count.
         /// </summary>
         public const int HybridCyclesMin = 1;
+
         /// <summary>
         /// Gets the maximum supported hybrid cycle count.
         /// </summary>
@@ -89,6 +100,7 @@ namespace FastLZMA2Net
         /// Gets the minimum supported search depth.
         /// </summary>
         public const int SearchDepthMin = 6;
+
         /// <summary>
         /// Gets the maximum supported search depth.
         /// </summary>
@@ -98,6 +110,7 @@ namespace FastLZMA2Net
         /// Gets the minimum supported fast length.
         /// </summary>
         public const int FastLengthMin = 6;
+
         /// <summary>
         /// Gets the maximum supported fast length.
         /// </summary>
@@ -107,6 +120,7 @@ namespace FastLZMA2Net
         /// Gets the minimum supported literal context bits.
         /// </summary>
         public const int LCMin = 0;
+
         /// <summary>
         /// Gets the maximum supported literal context bits.
         /// </summary>
@@ -116,6 +130,7 @@ namespace FastLZMA2Net
         /// Gets the minimum supported literal position bits.
         /// </summary>
         public const int LPMin = 0;
+
         /// <summary>
         /// Gets the maximum supported literal position bits.
         /// </summary>
@@ -125,6 +140,7 @@ namespace FastLZMA2Net
         /// Gets the minimum supported position bits.
         /// </summary>
         public const int PBMin = 0;
+
         /// <summary>
         /// Gets the maximum supported position bits.
         /// </summary>

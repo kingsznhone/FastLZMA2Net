@@ -17,14 +17,17 @@ namespace FastLZMA2Net
         private readonly Stream _innerStream;
         private readonly nint _context;
         internal nint ContextPtr => _context;
+
         /// <summary>
         /// Gets whether the stream can be read.
         /// </summary>
         public override bool CanRead => false;
+
         /// <summary>
         /// Gets whether the stream can be written to.
         /// </summary>
         public override bool CanWrite => !disposed;
+
         /// <summary>
         /// Gets whether the stream supports seeking.
         /// </summary>

@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using FastLZMA2Net;
+﻿using FastLZMA2Net;
+using System.Diagnostics;
 
 namespace Demo
 {
@@ -11,6 +11,7 @@ namespace Demo
             string SourceFilePath = @"D:\dummy.tar";
             string CompressedFilePath = @"D:\dummy.tar.fl2";
             string DecompressedFilePath = @"D:\dummy.recovery.tar";
+
             // Simple compression
             byte[] origin = File.ReadAllBytes(SourceFilePath);
             byte[] compressed = FL2.Compress(origin, 0);
@@ -20,15 +21,12 @@ namespace Demo
             Compressor compressor = new(0) { CompressLevel = 10 };
             compressor.CompressLevel = 10;
             FL2.EstimateCompressMemoryUsage(compressor.CompressLevel, compressor.ThreadCount);
+            Console.WriteLine($"Estimated memory usage for compression: {FL2.EstimateCompressMemoryUsage(compressor.CompressLevel, compressor.ThreadCount) / 1024.0 / 1024.0:F2} MB");
             compressed = compressor.Compress(origin);
             Console.WriteLine($"{compressed.Length} compressed");
 
             Decompressor decompressor = new Decompressor();
             decompressed = decompressor.Decompress(compressed);
-
-            // Streaming Compression
-            byte[] buffer = new byte[256 * 1024 * 1024];
-            // use 256MB input buffer
 
             // small file or data (<2GB)
             using (MemoryStream ms = new MemoryStream())
@@ -39,6 +37,10 @@ namespace Demo
                 }
                 compressed = ms.ToArray();
             }
+
+            // Streaming Compression
+            // use 256MB input buffer
+            byte[] buffer = new byte[256 * 1024 * 1024];
 
             //large file streaming compression using Direct file access(>2GB)
             long sourceFileSize = new FileInfo(SourceFilePath).Length;
@@ -71,7 +73,7 @@ namespace Demo
             double compressSpeedMBps = sourceFileSize / 1024.0 / 1024.0 / compressSeconds;
             Console.WriteLine($"Streaming compression finished: {compressSeconds:F2}s, {compressSpeedMBps:F2} MB/s");
 
-            //large file streaming decompress(>2GB)
+            //large file streaming decompress to file(>2GB)
             Stopwatch swDecompress = Stopwatch.StartNew();
             using (FileStream recoveryStream = File.Create(DecompressedFilePath))
             {

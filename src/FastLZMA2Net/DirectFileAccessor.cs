@@ -2,7 +2,7 @@
 
 namespace FastLZMA2Net
 {
-    internal unsafe sealed class DirectFileAccessor : IDisposable
+    internal sealed unsafe class DirectFileAccessor : IDisposable
     {
         private readonly MemoryMappedFile _mmFile;
         private readonly MemoryMappedViewAccessor _accessor;

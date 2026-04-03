@@ -43,7 +43,7 @@ namespace Test
             CollectionAssert.AreEqual(_originData, recovered);
         }
 
-        #endregion
+        #endregion Write One-shot
 
         #region Write Blocked / Append
 
@@ -91,7 +91,7 @@ namespace Test
             CollectionAssert.AreEqual(_originData, recovered);
         }
 
-        #endregion
+        #endregion Write Blocked / Append
 
         #region WriteAsync
 
@@ -123,7 +123,7 @@ namespace Test
             CollectionAssert.AreEqual(_originData, recovered);
         }
 
-        #endregion
+        #endregion WriteAsync
 
         #region Stream Capabilities
 
@@ -151,7 +151,7 @@ namespace Test
             Assert.IsFalse(cs.CanSeek);
         }
 
-        #endregion
+        #endregion Stream Capabilities
 
         #region NotSupported Operations
 
@@ -237,7 +237,7 @@ namespace Test
             Assert.ThrowsExactly<NotSupportedException>(() => cs.Position = 0);
         }
 
-        #endregion
+        #endregion NotSupported Operations
 
         #region Parameters
 
@@ -281,7 +281,7 @@ namespace Test
             _ = cs.HighCompressLevel;
         }
 
-        #endregion
+        #endregion Parameters
 
         #region Constructor Guards
 
@@ -313,7 +313,7 @@ namespace Test
                 () => new CompressStream(ms, outBufferSize: (nint)Array.MaxLength + 1));
         }
 
-        #endregion
+        #endregion Constructor Guards
 
         #region Dispose
 
@@ -429,7 +429,7 @@ namespace Test
                 () => cs.GetParameter(FL2Parameter.CompressionLevel));
         }
 
-        #endregion
+        #endregion Dispose
 
         #region MT
 
@@ -447,6 +447,6 @@ namespace Test
             CollectionAssert.AreEqual(_originData, recovered);
         }
 
-        #endregion
+        #endregion MT
     }
 }

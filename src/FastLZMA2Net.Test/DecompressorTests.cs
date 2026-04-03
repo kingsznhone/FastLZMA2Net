@@ -38,7 +38,7 @@ namespace Test
             Assert.IsTrue(decompressor.ThreadCount > 0);
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Decompress byte[]
 
@@ -74,7 +74,7 @@ namespace Test
             Assert.ThrowsExactly<FL2Exception>(() => decompressor.Decompress(corrupt));
         }
 
-        #endregion
+        #endregion Decompress byte[]
 
         #region Decompress Span
 
@@ -86,7 +86,7 @@ namespace Test
             CollectionAssert.AreEqual(_originData, decompressed);
         }
 
-        #endregion
+        #endregion Decompress Span
 
         #region DecompressAsync
 
@@ -116,7 +116,7 @@ namespace Test
                 () => decompressor.DecompressAsync(_compressedData, cts.Token));
         }
 
-        #endregion
+        #endregion DecompressAsync
 
         #region Init
 
@@ -134,7 +134,7 @@ namespace Test
             decompressor.Init(prop);
         }
 
-        #endregion
+        #endregion Init
 
         #region Cross-method Roundtrip
 
@@ -167,7 +167,7 @@ namespace Test
             CollectionAssert.AreEqual(src, decompressed);
         }
 
-        #endregion
+        #endregion Cross-method Roundtrip
 
         #region Dispose Guards
 
@@ -203,6 +203,6 @@ namespace Test
             decompressor.Dispose();
         }
 
-        #endregion
+        #endregion Dispose Guards
     }
 }

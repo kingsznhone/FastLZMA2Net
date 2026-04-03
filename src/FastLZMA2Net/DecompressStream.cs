@@ -14,14 +14,17 @@ namespace FastLZMA2Net
         private readonly Stream _innerStream;
         private readonly nint _context;
         internal nint ContextPtr => _context;
+
         /// <summary>
         /// Gets whether the stream can be read.
         /// </summary>
         public override bool CanRead => !disposed;
+
         /// <summary>
         /// Gets whether the stream can be written to.
         /// </summary>
         public override bool CanWrite => false;
+
         /// <summary>
         /// Gets whether the stream supports seeking.
         /// </summary>
@@ -335,7 +338,6 @@ namespace FastLZMA2Net
             }
             GC.SuppressFinalize(this);
         }
-
 
         /// <summary>
         /// Finalizes the decompression stream if it was not disposed.

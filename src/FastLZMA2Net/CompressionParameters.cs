@@ -9,10 +9,12 @@
         /// Fastest strategy with the lowest compression ratio.
         /// </summary>
         Fast,
+
         /// <summary>
         /// Balanced optimized strategy.
         /// </summary>
         Opt,
+
         /// <summary>
         /// Highest compression ratio using hybrid mode.
         /// </summary>
@@ -108,7 +110,7 @@
         /// <summary>
         /// Compares two parameter sets for value equality.
         /// </summary>
-        public static bool operator ==(CompressionParameters left, CompressionParameters right) 
+        public static bool operator ==(CompressionParameters left, CompressionParameters right)
             => left.Equals(right);
 
         /// <summary>

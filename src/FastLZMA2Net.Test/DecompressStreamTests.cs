@@ -39,7 +39,7 @@ namespace Test
             CollectionAssert.AreEqual(_originData, buffer[0..bytesRead]);
         }
 
-        #endregion
+        #endregion Read One-shot
 
         #region Read Blocked
 
@@ -73,7 +73,7 @@ namespace Test
             CollectionAssert.AreEqual(_originData, recoveryStream.ToArray());
         }
 
-        #endregion
+        #endregion Read Blocked
 
         #region ReadAsync
 
@@ -112,7 +112,7 @@ namespace Test
             CollectionAssert.AreEqual(_originData, recoveryStream.ToArray());
         }
 
-        #endregion
+        #endregion ReadAsync
 
         #region CopyTo
 
@@ -144,7 +144,7 @@ namespace Test
             Assert.ThrowsExactly<ArgumentNullException>(() => ds.CopyTo(null!));
         }
 
-        #endregion
+        #endregion CopyTo
 
         #region Stream Capabilities
 
@@ -172,7 +172,7 @@ namespace Test
             Assert.IsFalse(ds.CanSeek);
         }
 
-        #endregion
+        #endregion Stream Capabilities
 
         #region Progress
 
@@ -194,7 +194,7 @@ namespace Test
             Assert.IsTrue(ds.Progress > 0);
         }
 
-        #endregion
+        #endregion Progress
 
         #region NotSupported Operations
 
@@ -288,7 +288,7 @@ namespace Test
             Assert.ThrowsExactly<NotSupportedException>(() => ds.Position = 0);
         }
 
-        #endregion
+        #endregion NotSupported Operations
 
         #region Constructor Guards
 
@@ -298,7 +298,7 @@ namespace Test
             Assert.ThrowsExactly<ArgumentNullException>(() => new DecompressStream(null!));
         }
 
-        #endregion
+        #endregion Constructor Guards
 
         #region Dispose
 
@@ -356,7 +356,7 @@ namespace Test
             Assert.ThrowsExactly<ObjectDisposedException>(() => _ = ds.Progress);
         }
 
-        #endregion
+        #endregion Dispose
 
         #region MT / ST
 
@@ -380,7 +380,7 @@ namespace Test
             CollectionAssert.AreEqual(_originData, recoveryStream.ToArray());
         }
 
-        #endregion
+        #endregion MT / ST
 
         #region Small Input Buffer
 
@@ -394,7 +394,7 @@ namespace Test
             CollectionAssert.AreEqual(_originData, recoveryStream.ToArray());
         }
 
-        #endregion
+        #endregion Small Input Buffer
 
         #region FileStream Source
 
@@ -417,6 +417,6 @@ namespace Test
             }
         }
 
-        #endregion
+        #endregion FileStream Source
     }
 }

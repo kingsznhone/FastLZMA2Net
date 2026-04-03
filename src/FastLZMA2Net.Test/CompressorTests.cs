@@ -43,7 +43,7 @@ namespace Test
             Assert.AreEqual(1u, compressor.ThreadCount);
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Compress byte[]
 
@@ -72,7 +72,7 @@ namespace Test
             Assert.ThrowsExactly<ArgumentNullException>(() => compressor.Compress((byte[])null!));
         }
 
-        #endregion
+        #endregion Compress byte[]
 
         #region Compress Span
 
@@ -94,7 +94,7 @@ namespace Test
             CollectionAssert.AreEqual(_originData, decompressed);
         }
 
-        #endregion
+        #endregion Compress Span
 
         #region CompressAsync
 
@@ -135,7 +135,7 @@ namespace Test
                 () => compressor.CompressAsync(_originData, cts.Token));
         }
 
-        #endregion
+        #endregion CompressAsync
 
         #region File Compress
 
@@ -168,7 +168,7 @@ namespace Test
             Assert.ThrowsExactly<ArgumentNullException>(() => compressor.Compress("Resources/dummy.raw", (string)null!));
         }
 
-        #endregion
+        #endregion File Compress
 
         #region Parameters
 
@@ -238,7 +238,7 @@ namespace Test
             Assert.AreEqual(FL2.FastLengthMin, compressor.FastLength);
         }
 
-        #endregion
+        #endregion Parameters
 
         #region Dispose Guards
 
@@ -292,7 +292,7 @@ namespace Test
             compressor.Dispose();
         }
 
-        #endregion
+        #endregion Dispose Guards
 
         #region MT Roundtrip
 
@@ -305,6 +305,6 @@ namespace Test
             CollectionAssert.AreEqual(_originData, decompressed);
         }
 
-        #endregion
+        #endregion MT Roundtrip
     }
 }

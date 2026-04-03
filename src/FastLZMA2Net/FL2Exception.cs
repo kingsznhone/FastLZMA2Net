@@ -7,36 +7,52 @@
     {
         /// <summary>No error was reported.</summary>
         NoError = 0,
+
         /// <summary>Generic error.</summary>
         Generic = 1,
+
         /// <summary>Internal library error.</summary>
         InternalError = 2,
+
         /// <summary>Corruption was detected in the input stream.</summary>
         CorruptionDetected = 3,
+
         /// <summary>The decoded data checksum did not match.</summary>
         ChecksumWrong = 4,
+
         /// <summary>The requested parameter is not supported.</summary>
         ParameterUnsupported = 5,
+
         /// <summary>The requested parameter value is out of range.</summary>
         ParameterOutOfBound = 6,
+
         /// <summary>The LCLP limit was exceeded.</summary>
         LclpMaxExceeded = 7,
+
         /// <summary>The operation is not valid in the current stage.</summary>
         StageWrong = 8,
+
         /// <summary>The context has not been initialized.</summary>
         InitMissing = 9,
+
         /// <summary>Memory allocation failed.</summary>
         MemoryAllocation = 10,
+
         /// <summary>The destination buffer is too small.</summary>
         DstSizeTooSmall = 11,
+
         /// <summary>The source size is invalid.</summary>
         SrcSizeWrong = 12,
+
         /// <summary>The operation was canceled.</summary>
         Canceled = 13,
+
         /// <summary>A buffer became full or empty during streaming.</summary>
         Buffer = 14,
+
         /// <summary>The operation timed out.</summary>
         TimedOut = 15,
+
         /// <summary>Maximum stable error code value; do not use directly.</summary>
         MaxCode = 20  /* never EVER use this value directly, it can change in future versions! Use FL2_isError() instead */
     }
@@ -47,10 +63,12 @@
     public class FL2Exception : Exception
     {
         private readonly FL2ErrorCode _errorCode;
+
         /// <summary>
         /// Gets the native error code associated with this exception.
         /// </summary>
         public FL2ErrorCode ErrorCode => _errorCode;
+
         internal FL2Exception(nuint code) : base(GetErrorString(GetErrorCode(code)))
         {
             _errorCode = GetErrorCode(code);
@@ -81,7 +99,6 @@
 
         // Error codes are returned as large nuint values: -1 == nuint.MaxValue, -MaxCode == nuint.MaxValue - MaxCode + 1.
         // Cache the boundary once to avoid per-call reflection.
-        
 
         private static readonly nuint _errorBound = unchecked(0u - (nuint)(uint)FL2ErrorCode.MaxCode);
 

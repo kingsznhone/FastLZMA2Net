@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using FastLZMA2Net;
+﻿using FastLZMA2Net;
+using System.Diagnostics;
 
 namespace Test
 {

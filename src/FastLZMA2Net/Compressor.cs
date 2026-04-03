@@ -1,6 +1,5 @@
 ﻿using System.Buffers;
 using System.IO.MemoryMappedFiles;
-using System.Runtime.Versioning;
 
 namespace FastLZMA2Net
 {

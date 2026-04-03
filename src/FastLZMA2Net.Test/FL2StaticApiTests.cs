@@ -55,8 +55,7 @@ namespace Test
             Assert.IsTrue(FL2.HighCompressionLevelMax > 0);
         }
 
-
-        #endregion
+        #endregion Constants and Properties
 
         #region GetPresetLevelParameters
 
@@ -84,7 +83,7 @@ namespace Test
             Assert.AreEqual(FL2ErrorCode.ParameterOutOfBound, ex.ErrorCode);
         }
 
-        #endregion
+        #endregion GetPresetLevelParameters
 
         #region FindCompressBound
 
@@ -117,7 +116,7 @@ namespace Test
             Assert.ThrowsExactly<ArgumentNullException>(() => FL2.FindCompressBound((byte[])null!));
         }
 
-        #endregion
+        #endregion FindCompressBound
 
         #region FindDecompressedSize
 
@@ -161,7 +160,7 @@ namespace Test
             Assert.ThrowsExactly<FileNotFoundException>(() => FL2.FindDecompressedSize("nonexistent.fl2"));
         }
 
-        #endregion
+        #endregion FindDecompressedSize
 
         #region Compress / Decompress byte[]
 
@@ -192,7 +191,7 @@ namespace Test
             Assert.ThrowsExactly<ArgumentNullException>(() => FL2.Decompress((byte[])null!));
         }
 
-        #endregion
+        #endregion Compress / Decompress byte[]
 
         #region Compress / Decompress Span
 
@@ -208,7 +207,7 @@ namespace Test
             CollectionAssert.AreEqual(src, decompressed);
         }
 
-        #endregion
+        #endregion Compress / Decompress Span
 
         #region CompressMT / DecompressMT byte[]
 
@@ -236,7 +235,7 @@ namespace Test
             Assert.ThrowsExactly<ArgumentNullException>(() => FL2.DecompressMT((byte[])null!, 0));
         }
 
-        #endregion
+        #endregion CompressMT / DecompressMT byte[]
 
         #region CompressMT / DecompressMT Span
 
@@ -252,7 +251,7 @@ namespace Test
             CollectionAssert.AreEqual(src, decompressed);
         }
 
-        #endregion
+        #endregion CompressMT / DecompressMT Span
 
         #region Cross-method Compatibility
 
@@ -292,7 +291,7 @@ namespace Test
             CollectionAssert.AreEqual(src, decompressed);
         }
 
-        #endregion
+        #endregion Cross-method Compatibility
 
         #region EstimateMemoryUsage
 
@@ -318,7 +317,7 @@ namespace Test
             Assert.IsTrue(usage > 0);
         }
 
-        #endregion
+        #endregion EstimateMemoryUsage
 
         #region Empty Data
 
@@ -330,6 +329,6 @@ namespace Test
             Assert.IsTrue(compressed.Length > 0);
         }
 
-        #endregion
+        #endregion Empty Data
     }
 }
