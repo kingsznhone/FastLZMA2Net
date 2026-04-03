@@ -1,6 +1,6 @@
 ﻿namespace FastLZMA2Net
 {
-    public struct FL2InBuffer
+    internal struct FL2InBuffer
     {
         /// <summary>
         /// start of input buffer
@@ -18,7 +18,7 @@
         public nuint pos;
     }
 
-    public struct FL2OutBuffer
+    internal struct FL2OutBuffer
     {
         /// <summary>
         /// start of output buffer
@@ -36,7 +36,7 @@
         public nuint pos;
     }
 
-    public struct FL2DictBuffer
+    internal struct FL2DictBuffer
     {
         /// <summary>
         /// start of available dict buffer
@@ -49,7 +49,7 @@
         public nuint size;
     }
 
-    public struct FL2cBuffer
+    internal struct FL2cBuffer
     {
         /// <summary>
         /// start of compressed data

@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FastLZMA2Net
 {
@@ -15,8 +14,8 @@ namespace FastLZMA2Net
         private bool disposed;
         private readonly Stream _innerStream;
         private readonly nint _context;
-        public nint ContextPtr => _context;
-        public override bool CanRead => _innerStream != null && _innerStream.CanRead;
+        internal nint ContextPtr => _context;
+        public override bool CanRead => !disposed;
         public override bool CanWrite => false;
         public override bool CanSeek => false;
 
@@ -40,6 +39,7 @@ namespace FastLZMA2Net
         /// <exception cref="FL2Exception"></exception>
         public DecompressStream(Stream srcStream, uint nbThreads = 0, int inBufferSize = 64 * 1024 * 1024)
         {
+            ArgumentNullException.ThrowIfNull(srcStream);
             bufferSize = inBufferSize;
             _innerStream = srcStream;
 
@@ -51,14 +51,20 @@ namespace FastLZMA2Net
             {
                 _context = NativeMethods.FL2_createDStreamMt(nbThreads);
             }
+            if (_context == IntPtr.Zero)
+                throw new FL2Exception(FL2ErrorCode.MemoryAllocation);
             var code = NativeMethods.FL2_initDStream(_context);
             if (FL2Exception.IsError(code))
             {
                 throw new FL2Exception(code);
             }
 
-            // Compressed stream input buffer
-            inputBufferArray = new byte[_innerStream.Length < bufferSize ? _innerStream.Length : bufferSize];
+            // Use the stream's known length only when it is seekable; fall back to bufferSize for
+            // non-seekable sources (NetworkStream, GZipStream, etc.) where Length throws.
+            long safeLength = _innerStream.CanSeek
+                ? Math.Min(_innerStream.Length, bufferSize)
+                : bufferSize;
+            inputBufferArray = new byte[safeLength];
             int bytesRead = _innerStream.Read(inputBufferArray, 0, inputBufferArray.Length);
             inputBufferHandle = GCHandle.Alloc(inputBufferArray, GCHandleType.Pinned);
             inBuffer = new FL2InBuffer()
@@ -82,6 +88,7 @@ namespace FastLZMA2Net
         /// <param name="bufferSize">Default = 256M</param>
         public override void CopyTo(Stream destination, int bufferSize = 256 * 1024 * 1024)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             ArgumentNullException.ThrowIfNull(destination);
             byte[] outBufferArray = new byte[bufferSize];
             Span<byte> outBufferSpan = outBufferArray.AsSpan();
@@ -96,7 +103,14 @@ namespace FastLZMA2Net
         /// <summary>
         /// How many data has been decompressed
         /// </summary>
-        public ulong Progress => NativeMethods.FL2_getDStreamProgress(_context);
+        public ulong Progress
+        {
+            get
+            {
+                ObjectDisposedException.ThrowIf(disposed, this);
+                return NativeMethods.FL2_getDStreamProgress(_context);
+            }
+        }
 
         /// <summary>
         /// Read decompressed data
@@ -107,6 +121,7 @@ namespace FastLZMA2Net
         /// <returns>How many bytes read.</returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             return Read(buffer.AsSpan(offset, count));
         }
 
@@ -117,6 +132,7 @@ namespace FastLZMA2Net
         /// <returns>How many bytes read.</returns>
         public override int Read(Span<byte> buffer)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             return DecompressCore(buffer);
         }
 
@@ -130,8 +146,9 @@ namespace FastLZMA2Net
         /// <returns>How many bytes read.</returns>
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             Memory<byte> bufferMemory = buffer.AsMemory(offset, count);
-            return ReadAsync(buffer, cancellationToken).AsTask();
+            return ReadAsync(bufferMemory, cancellationToken).AsTask();
         }
 
         /// <summary>
@@ -142,11 +159,13 @@ namespace FastLZMA2Net
         /// <returns>How many bytes read.</returns>
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             return new ValueTask<int>(DecompressCore(buffer.Span, cancellationToken));
         }
 
         private unsafe int DecompressCore(Span<byte> buffer, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             // Set the memory limit for the decompression stream under MT. Otherwise decode will failed if buffer is too small.
             // Guess 64mb buffer is enough for most case.
             //NativeMethods.FL2_setDStreamMemoryLimitMt(_context, (nuint)64 * 1024 * 1024);
@@ -262,10 +281,9 @@ namespace FastLZMA2Net
         public override void WriteByte(byte value)
             => throw new NotSupportedException();
 
-        public override void Close() => Dispose(true);
-
         public override void Flush()
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             _innerStream.Flush();
         }
 
@@ -273,25 +291,34 @@ namespace FastLZMA2Net
         {
             if (!disposed)
             {
-                _innerStream.Dispose();
                 if (disposing)
                 {
-                    inputBufferHandle.Free();
+                    _innerStream.Dispose();
                 }
+                inputBufferHandle.Free();
                 NativeMethods.FL2_freeDStream(_context);
                 disposed = true;
             }
         }
 
+        /// <summary>
+        /// Asynchronously releases managed and native resources.
+        /// </summary>
+        public override async ValueTask DisposeAsync()
+        {
+            if (!disposed)
+            {
+                inputBufferHandle.Free();
+                NativeMethods.FL2_freeDStream(_context);
+                await _innerStream.DisposeAsync().ConfigureAwait(false);
+                disposed = true;
+            }
+            GC.SuppressFinalize(this);
+        }
+
         ~DecompressStream()
         {
             Dispose(disposing: false);
-        }
-
-        public new void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

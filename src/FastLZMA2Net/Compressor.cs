@@ -1,27 +1,43 @@
-﻿using System.IO.MemoryMappedFiles;
+﻿using System.Buffers;
+using System.IO.MemoryMappedFiles;
 using System.Runtime.Versioning;
 
 namespace FastLZMA2Net
 {
     /// <summary>
-    /// Fast LZMA2 Compress Context
+    /// Fast LZMA2 Compress Context.
+    /// <para>This type is not thread-safe. Do not share instances across threads without external synchronization.</para>
     /// </summary>
     public partial class Compressor : IDisposable
     {
         private readonly nint _context;
-        public nint ContextPtr => _context;
+        internal nint ContextPtr => _context;
 
         private bool disposed;
 
         /// <summary>
         /// Thread use of the context
         /// </summary>
-        public uint ThreadCount => NativeMethods.FL2_getCCtxThreadCount(_context);
+        public uint ThreadCount
+        {
+            get
+            {
+                ObjectDisposedException.ThrowIf(disposed, this);
+                return NativeMethods.FL2_getCCtxThreadCount(_context);
+            }
+        }
 
         /// <summary>
         /// Dictionary size property
         /// </summary>
-        public byte DictSizeProperty => NativeMethods.FL2_getCCtxDictProp(_context);
+        public byte DictSizeProperty
+        {
+            get
+            {
+                ObjectDisposedException.ThrowIf(disposed, this);
+                return NativeMethods.FL2_getCCtxDictProp(_context);
+            }
+        }
 
         /// <summary>
         /// Compress Level [1..10]
@@ -81,30 +97,44 @@ namespace FastLZMA2Net
         public Compressor(uint nbThreads = 0, int compressLevel = 6)
         {
             _context = NativeMethods.FL2_createCCtxMt(nbThreads);
-            CompressLevel = (int)compressLevel;
+            if (_context == IntPtr.Zero)
+                throw new FL2Exception(FL2ErrorCode.MemoryAllocation);
+            CompressLevel = compressLevel;
         }
 
         /// <summary>
-        /// Compress data asynchronized
+        /// Compresses data asynchronously using the current compression level.
+        /// This is CPU-bound work dispatched to the thread pool; cancellation prevents the task from starting.
         /// </summary>
-        /// <param name="src">Data byte array</param>
-        /// <returns>Bytes Compressed</returns>
-        public Task<byte[]> CompressAsync(byte[] src)
+        public Task<byte[]> CompressAsync(byte[] src, CancellationToken cancellationToken = default)
         {
-            return CompressAsync(src, CompressLevel);
+            ObjectDisposedException.ThrowIf(disposed, this);
+            return CompressAsync(src, CompressLevel, cancellationToken);
         }
 
         /// <summary>
-        /// Compress data asynchronized
+        /// Compresses data asynchronously with the specified compression level.
+        /// This is CPU-bound work dispatched to the thread pool; cancellation prevents the task from starting.
         /// </summary>
-        /// <param name="src">Data byte array</param>
-        /// <param name="compressLevel">compress level</param>
-        /// <returns>Bytes Compressed</returns>
-        public Task<byte[]> CompressAsync(byte[] src, int compressLevel)
+        public Task<byte[]> CompressAsync(byte[] src, int compressLevel, CancellationToken cancellationToken = default)
         {
-            return Task.Run(() => Compress(src, compressLevel));
+            ObjectDisposedException.ThrowIf(disposed, this);
+            return Task.Run(() => Compress(src, compressLevel), cancellationToken);
         }
 
+        /// <summary>
+        /// Compresses data asynchronously from a <see cref="ReadOnlyMemory{T}"/> source.
+        /// This is CPU-bound work dispatched to the thread pool; cancellation prevents the task from starting.
+        /// </summary>
+        public Task<byte[]> CompressAsync(ReadOnlyMemory<byte> src, CancellationToken cancellationToken = default)
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            return Task.Run(() => Compress(src.Span), cancellationToken);
+        }
+
+        /// <summary>
+        /// Compresses data using the current compression level.
+        /// </summary>
         public byte[] Compress(byte[] src)
         {
             return Compress(src, 0);
@@ -119,15 +149,52 @@ namespace FastLZMA2Net
         /// <exception cref="FL2Exception"></exception>
         public byte[] Compress(byte[] src, int compressLevel)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             ArgumentNullException.ThrowIfNull(src);
 
-            byte[] buffer = new byte[FL2.FindCompressBound(src)];
-            nuint code = NativeMethods.FL2_compressCCtx(_context, buffer, (nuint)buffer.Length, src, (nuint)src.Length, compressLevel);
-            if (FL2Exception.IsError(code))
+            nuint bound = FL2.FindCompressBound(src);
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(checked((int)bound));
+            try
             {
-                throw new FL2Exception(code);
+                nuint code = NativeMethods.FL2_compressCCtx(_context, buffer, bound, src, (nuint)src.Length, compressLevel);
+                if (FL2Exception.IsError(code))
+                {
+                    throw new FL2Exception(code);
+                }
+                return buffer.AsSpan(0, checked((int)code)).ToArray();
             }
-            return buffer[..(int)code];
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+        }
+
+        /// <summary>
+        /// Compresses data from a <see cref="ReadOnlySpan{T}"/> source. Avoids a copy when the caller
+        /// already holds data in a pooled or stack-allocated buffer.
+        /// </summary>
+        public unsafe byte[] Compress(ReadOnlySpan<byte> src, int compressLevel = 0)
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            nuint bound = FL2.FindCompressBound((nuint)src.Length);
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(checked((int)bound));
+            try
+            {
+                nuint code;
+                fixed (byte* pSrc = src)
+                fixed (byte* pDst = buffer)
+                {
+                    code = NativeMethods.FL2_compressCCtx(_context, pDst, bound, pSrc, (nuint)src.Length,
+                        compressLevel == 0 ? CompressLevel : compressLevel);
+                }
+                if (FL2Exception.IsError(code))
+                    throw new FL2Exception(code);
+                return buffer.AsSpan(0, checked((int)code)).ToArray();
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
 
         /// <summary>
@@ -139,6 +206,9 @@ namespace FastLZMA2Net
         /// <exception cref="FL2Exception"></exception>
         public unsafe nuint Compress(string srcPath, string dstPath)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            ArgumentException.ThrowIfNullOrWhiteSpace(srcPath);
+            ArgumentException.ThrowIfNullOrWhiteSpace(dstPath);
             nuint code;
             FileInfo sourceFile = new FileInfo(srcPath);
             FileInfo destFile = new FileInfo(dstPath);
@@ -146,7 +216,7 @@ namespace FastLZMA2Net
             {
                 destFile.Delete();
             }
-            using (DirectFileAccessor accessorSrc = new DirectFileAccessor(sourceFile.FullName, FileMode.Open, null, sourceFile.Length, MemoryMappedFileAccess.ReadWrite))
+            using (DirectFileAccessor accessorSrc = new DirectFileAccessor(sourceFile.FullName, FileMode.Open, null, sourceFile.Length, MemoryMappedFileAccess.Read))
             {
                 code = NativeMethods.FL2_compressBound((nuint)sourceFile.Length);
                 if (FL2Exception.IsError(code))
@@ -179,6 +249,7 @@ namespace FastLZMA2Net
         /// <exception cref="FL2Exception"></exception>
         public nuint SetParameter(FL2Parameter param, nuint value)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             nuint code = NativeMethods.FL2_CCtx_setParameter(_context, param, value);
             if (FL2Exception.IsError(code))
             {
@@ -195,6 +266,7 @@ namespace FastLZMA2Net
         /// <exception cref="FL2Exception"></exception>
         public nuint GetParameter(FL2Parameter param)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             var code = NativeMethods.FL2_CCtx_getParameter(_context, param);
             if (FL2Exception.IsError(code))
             {

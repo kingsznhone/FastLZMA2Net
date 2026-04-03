@@ -17,7 +17,7 @@ namespace Demo
             // Context compression, context can be reuse.
             Compressor compressor = new(0) { CompressLevel = 10 };
             compressor.CompressLevel = 10;
-            FL2.EstimateCompressMemoryUsage(compressor.ContextPtr);
+            FL2.EstimateCompressMemoryUsage(compressor.CompressLevel, compressor.ThreadCount);
             compressed = compressor.Compress(origin);
             compressed = compressor.Compress(origin);
             compressed = compressor.Compress(origin);

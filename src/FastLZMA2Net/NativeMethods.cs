@@ -1,46 +1,95 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace FastLZMA2Net
 {
-    public static unsafe partial class NativeMethods
+    internal static unsafe partial class NativeMethods
     {
         static NativeMethods()
         {
-            SetWinDllDirectory();
+            NativeLibrary.SetDllImportResolver(typeof(NativeMethods).Assembly, ImportResolver);
         }
 
-        public static void SetWinDllDirectory()
+        /// <summary>
+        /// Resolves the native fast-lzma2 library path for both NuGet package consumers and
+        /// project-reference dev scenarios, across all supported RIDs.
+        /// </summary>
+        private static IntPtr ImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
         {
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            if (libraryName != LibraryName)
+                return IntPtr.Zero;
+
+            // Probe runtimes/{rid}/native/ relative to the assembly.
+            // - NuGet consumers (dotnet build): SDK copies the matching RID asset to
+            //   {output}/runtimes/{rid}/native/ and records it in deps.json.
+            // - Project-reference dev builds: CopyToOutputDirectory mirrors the same layout.
+            string? rid;
+            string nativeFileName;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                throw new PlatformNotSupportedException($"{Environment.OSVersion.Platform} is not support");
+                rid = RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.X64 => "win-x64",
+                    Architecture.X86 => "win-x86",
+                    Architecture.Arm64 => "win-arm64",
+                    _ => null
+                };
+                nativeFileName = $"{LibraryName}.dll";
             }
-            string path;
-
-            var location = Assembly.GetExecutingAssembly().Location;
-            if (string.IsNullOrEmpty(location) || (path = Path.GetDirectoryName(location)) == null)
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                Trace.TraceWarning($"{nameof(FastLZMA2Net)}: Failed to get executing assembly location");
-                return;
+                // Detect musl libc (Alpine Linux) vs glibc to pick the correct RID.
+                var musl = IsMusl();
+                rid = RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.X64 => musl ? "linux-musl-x64" : "linux-x64",
+                    Architecture.X86 => "linux-x86",
+                    Architecture.Arm64 => musl ? "linux-musl-arm64" : "linux-arm64",
+                    Architecture.Arm => "linux-arm",
+                    _ => null
+                };
+                nativeFileName = $"lib{LibraryName}.so";
+            }
+            else
+            {
+                // Unknown platform: fall through to default OS probing.
+                if (NativeLibrary.TryLoad(libraryName, assembly, searchPath, out var fallback))
+                    return fallback;
+                return IntPtr.Zero;
             }
 
-            // Nuget package
-            if (Path.GetFileName(path).StartsWith("net", StringComparison.Ordinal) && Path.GetFileName(Path.GetDirectoryName(path)) == "lib" && File.Exists(Path.Combine(path, "../../fastlzma2net.nuspec")))
-                path = Path.Combine(path, "../../build");
+            if (rid is not null)
+            {
+                var baseDir = Path.GetDirectoryName(assembly.Location) ?? AppContext.BaseDirectory;
 
-            var platform = Environment.Is64BitProcess ? "x64" : "x86";
-            if (!SetDllDirectoryW(Path.Combine(path, platform)))
-                Trace.TraceWarning($"{nameof(FastLZMA2Net)}: Failed to set DLL directory to '{path}'");
+                // Probe 1: NuGet / publish layout — runtimes/{rid}/native/{file}
+                var runtimePath = Path.Combine(baseDir, "runtimes", rid, "native", nativeFileName);
+                if (NativeLibrary.TryLoad(runtimePath, out var runtimeHandle))
+                    return runtimeHandle;
+
+                // Probe 2: project-reference dev build layout — build/runtimes/{rid}/native/{file}
+                // (CopyToOutputDirectory without <Link> preserves the original relative path)
+                var buildRuntimePath = Path.Combine(baseDir, "build", "runtimes", rid, "native", nativeFileName);
+                if (NativeLibrary.TryLoad(buildRuntimePath, out var buildHandle))
+                    return buildHandle;
+            }
+
+            // Fallback: default OS probing — handles dotnet publish -r <rid>
+            // where the native binary is copied directly to the output root.
+            if (NativeLibrary.TryLoad(libraryName, assembly, searchPath, out var handle))
+                return handle;
+
+            return IntPtr.Zero;
         }
 
-        [LibraryImport("kernel32.dll", StringMarshalling = StringMarshalling.Utf16)]
-        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-        [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static partial bool SetDllDirectoryW(string path);
+        // Detects musl libc (Alpine Linux) by looking for its dynamic linker in /lib.
+        private static bool IsMusl()
+        {
+            try { return Directory.EnumerateFiles("/lib", "ld-musl-*").Any(); }
+            catch { return false; }
+        }
 
         private const string LibraryName = "fast-lzma2";
 

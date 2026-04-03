@@ -119,7 +119,7 @@
         /// pb value for LZMA2 encoder
         /// Default = 2
         /// </summary>
-        posBits,
+        PosBits,
 
         /// <summary>
         /// Omit the property byte at the start of the stream. For use within 7-zip

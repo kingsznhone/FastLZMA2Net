@@ -25,26 +25,40 @@
     {
         private readonly FL2ErrorCode _errorCode;
         public FL2ErrorCode ErrorCode => _errorCode;
-        public FL2Exception(nuint code) : base(GetErrorString(GetErrorCode(code)))
+        internal FL2Exception(nuint code) : base(GetErrorString(GetErrorCode(code)))
         {
             _errorCode = GetErrorCode(code);
         }
 
-        public FL2Exception(FL2ErrorCode code) : base(GetErrorString(code))
+        internal FL2Exception(FL2ErrorCode code) : base(GetErrorString(code))
         {
             _errorCode = code;
         }
 
-        public static FL2ErrorCode GetErrorCode(nuint code)
+        /// <summary>
+        /// Creates an FL2Exception with a custom message and inner exception.
+        /// </summary>
+        public FL2Exception(string message, Exception innerException) : base(message, innerException)
+        {
+            _errorCode = FL2ErrorCode.Generic;
+        }
+
+        internal static FL2ErrorCode GetErrorCode(nuint code)
         {
             if (!IsError(code))
                 return FL2ErrorCode.NoError;
             return (FL2ErrorCode)(0 - code);
         }
 
-        public static bool IsError(nuint code) => code > 0 - Enum.GetValues(typeof(FL2ErrorCode)).Cast<uint>().Max();
+        // Error codes are returned as large nuint values: -1 == nuint.MaxValue, -MaxCode == nuint.MaxValue - MaxCode + 1.
+        // Cache the boundary once to avoid per-call reflection.
+        
 
-        public static string GetErrorString(FL2ErrorCode code) => code switch
+        private static readonly nuint _errorBound = 0u - (nuint)(uint)FL2ErrorCode.MaxCode;
+
+        internal static bool IsError(nuint code) => code > _errorBound;
+
+        internal static string GetErrorString(FL2ErrorCode code) => code switch
         {
             FL2ErrorCode.NoError => "No error detected",
             FL2ErrorCode.Generic => "Error (generic)",

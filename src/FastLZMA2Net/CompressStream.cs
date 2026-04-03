@@ -15,9 +15,9 @@ namespace FastLZMA2Net
         private bool disposed = false;
         private readonly Stream _innerStream;
         private readonly nint _context;
-        public nint ContextPtr => _context;
-        public override bool CanRead => _innerStream != null && _innerStream.CanRead;
-        public override bool CanWrite => false;
+        internal nint ContextPtr => _context;
+        public override bool CanRead => false;
+        public override bool CanWrite => !disposed;
         public override bool CanSeek => false;
 
         /// <summary>
@@ -90,9 +90,12 @@ namespace FastLZMA2Net
         /// <exception cref="FL2Exception"></exception>
         public CompressStream(Stream dstStream, uint nbThreads = 0, int outBufferSize = 64 * 1024 * 1024)
         {
+            ArgumentNullException.ThrowIfNull(dstStream);
             bufferSize = outBufferSize;
             _innerStream = dstStream;
             _context = NativeMethods.FL2_createCStreamMt(nbThreads, 1);
+            if (_context == IntPtr.Zero)
+                throw new FL2Exception(FL2ErrorCode.MemoryAllocation);
             var code = NativeMethods.FL2_initCStream(_context, 0);
             if (FL2Exception.IsError(code))
             {
@@ -118,6 +121,7 @@ namespace FastLZMA2Net
         /// <param name="count">How many bytes to append</param>
         public void Append(byte[] buffer, int offset, int count)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             Append(buffer.AsSpan(offset, count));
         }
 
@@ -127,6 +131,7 @@ namespace FastLZMA2Net
         /// <param name="buffer">Extra data</param>
         public void Append(ReadOnlySpan<byte> buffer)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             CompressCore(buffer, true);
         }
 
@@ -138,6 +143,7 @@ namespace FastLZMA2Net
         /// <param name="count">How many bytes to append</param>
         public override void Write(byte[] buffer, int offset, int count)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             Write(buffer.AsSpan(offset, count));
         }
 
@@ -147,6 +153,7 @@ namespace FastLZMA2Net
         /// <param name="buffer">Raw data</param>
         public override void Write(ReadOnlySpan<byte> buffer)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             CompressCore(buffer, false);
         }
 
@@ -160,9 +167,9 @@ namespace FastLZMA2Net
         /// <returns></returns>
         public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             Memory<byte> bufferMemory = buffer.AsMemory(offset, count);
             await new ValueTask<int>(CompressCore(bufferMemory.Span, false, cancellationToken)).ConfigureAwait(false);
-            return;
         }
 
         /// <summary>
@@ -173,8 +180,8 @@ namespace FastLZMA2Net
         /// <returns></returns>
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             await new ValueTask<int>(CompressCore(buffer.Span, false, cancellationToken)).ConfigureAwait(false);
-            return;
         }
 
         private unsafe int CompressCore(ReadOnlySpan<byte> buffer, bool Appending, CancellationToken cancellationToken = default)
@@ -343,16 +350,12 @@ namespace FastLZMA2Net
             => throw new NotSupportedException();
 
         /// <summary>
-        /// Close streaming progress
-        /// </summary>
-        public override void Close() => Dispose(true);
-
-        /// <summary>
         /// Write Checksum in the end. finish compress progress.
         /// </summary>
         /// <exception cref="FL2Exception"></exception>
         public override void Flush()
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             var code = NativeMethods.FL2_endStream(_context, ref outBuffer);
             if (FL2Exception.IsError(code))
             {
@@ -379,6 +382,7 @@ namespace FastLZMA2Net
         /// <exception cref="FL2Exception"></exception>
         public nuint SetParameter(FL2Parameter param, nuint value)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             nuint code = NativeMethods.FL2_CStream_setParameter(_context, param, value);
             if (FL2Exception.IsError(code))
             {
@@ -395,6 +399,7 @@ namespace FastLZMA2Net
         /// <exception cref="FL2Exception"></exception>
         public nuint GetParameter(FL2Parameter param)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
             var code = NativeMethods.FL2_CStream_getParameter(_context, param);
             if (FL2Exception.IsError(code))
             {
@@ -407,26 +412,42 @@ namespace FastLZMA2Net
         {
             if (!disposed)
             {
-                Flush();
-                _innerStream.Dispose();
                 if (disposing)
                 {
-                    outputBufferHandle.Free();
+                    Flush();
+                    _innerStream.Dispose();
                 }
+                outputBufferHandle.Free();
                 NativeMethods.FL2_freeCStream(_context);
                 disposed = true;
             }
         }
 
+        /// <summary>
+        /// Asynchronously releases managed and native resources.
+        /// </summary>
+        public override async ValueTask DisposeAsync()
+        {
+            if (!disposed)
+            {
+                try
+                {
+                    Flush();
+                }
+                finally
+                {
+                    outputBufferHandle.Free();
+                    NativeMethods.FL2_freeCStream(_context);
+                    await _innerStream.DisposeAsync().ConfigureAwait(false);
+                    disposed = true;
+                }
+            }
+            GC.SuppressFinalize(this);
+        }
+
         ~CompressStream()
         {
             Dispose(disposing: false);
-        }
-
-        public new void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

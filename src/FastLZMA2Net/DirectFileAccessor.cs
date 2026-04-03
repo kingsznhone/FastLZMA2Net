@@ -18,7 +18,7 @@ namespace FastLZMA2Net
             _filePath = path;
             var fileInfo = new FileInfo(path);
             _mmFile = MemoryMappedFile.CreateFromFile(_filePath, mode, null, capacity, access);
-            _accessor = _mmFile.CreateViewAccessor();
+            _accessor = _mmFile.CreateViewAccessor(0, 0, access);
             _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref mmPtr);
             Length = capacity;
             FullName = fileInfo.FullName;
