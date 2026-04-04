@@ -119,8 +119,8 @@ byte[] decompressed = recoveryStream.ToArray();
 
 .NET byte arrays are limited to ~2 GB. For larger payloads use streaming with `Append`.
 
-> **`Write()` vs `Append()`** — `Write()` finalises the stream after a single call.
-> Use `Append()` to feed data in chunks; the stream is automatically finalised when `Dispose()` is called (i.e. at the end of a `using` block). You may also call `Flush()` explicitly, but it is not required.
+> Call `Write()` as many times as needed to feed data in chunks.
+> The stream is automatically finalised when `Dispose()` is called (i.e. at the end of a `using` block). You may also call `Flush()` explicitly.
 
 **Compress**
 
@@ -137,7 +137,7 @@ using (CompressStream cs = new(compressedFile))
     {
         int bytesToRead = (int)Math.Min(buffer.Length, sourceFile.Length - offset);
         int bytesRead   = sourceFile.Read(buffer, 0, bytesToRead);
-        cs.Append(buffer, 0, bytesRead);
+        cs.Write(buffer, 0, bytesRead);
         offset += bytesRead;
     }
 }   // Dispose() automatically finalises the stream and writes the end checksum.
@@ -170,7 +170,7 @@ nuint size = FL2.EstimateCompressMemoryUsage(compressionLevel: 10, nbThreads: 8)
 
 // Using an existing context's settings
 using Compressor compressor = new(nbThreads: 4) { CompressLevel = 10 };
-nuint size = FL2.EstimateCompressMemoryUsage(compressor.ContextPtr);
+nuint size = FL2.EstimateCompressMemoryUsage(compressor.CompressLevel, compressor.ThreadCount);
 ```
 
 ### Find decompressed size
