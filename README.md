@@ -99,59 +99,51 @@ nuint compressedBytes = compressor.Compress(sourceFilePath, destFilePath);
 ```
 
 
-### Streaming Compression — small data (< 2 GB)
+### Streaming Compression
 
-```csharp
-// compress
-using MemoryStream ms = new();
-using (CompressStream cs = new(ms))
-    cs.Write(origin);
-byte[] compressed = ms.ToArray();
-
-// decompress
-using MemoryStream recoveryStream = new();
-using (DecompressStream ds = new(new MemoryStream(compressed)))
-    ds.CopyTo(recoveryStream);
-byte[] decompressed = recoveryStream.ToArray();
-```
-
-### Streaming Compression — large files (> 2 GB)
-
-.NET byte arrays are limited to ~2 GB. For larger payloads use streaming with `Append`.
-
-> Call `Write()` as many times as needed to feed data in chunks.
-> The stream is automatically finalised when `Dispose()` is called (i.e. at the end of a `using` block). You may also call `Flush()` explicitly.
+`CompressStream` is a writable `Stream` and `DecompressStream` is a readable `Stream`.
+Pipe any stream in or out via `Write` / `CopyTo` / `CopyToAsync` — there is no size restriction.
+The compress stream is finalised automatically when `Dispose()` is called.
 
 **Compress**
 
 ```csharp
-byte[] buffer = new byte[64 * 1024 * 1024]; // 64 MB read buffer
+// in-memory
+using MemoryStream ms = new();
+using (CompressStream cs = new(ms) { CompressLevel = 10 })
+    cs.Write(origin);
+byte[] compressed = ms.ToArray();
 
+// file (works for any size)
 using FileStream sourceFile     = File.OpenRead(sourceFilePath);
 using FileStream compressedFile = File.Create(compressedFilePath);
-using (CompressStream cs = new(compressedFile))
-{
-    cs.CompressLevel = 10;
-    long offset = 0;
-    while (offset < sourceFile.Length)
-    {
-        int bytesToRead = (int)Math.Min(buffer.Length, sourceFile.Length - offset);
-        int bytesRead   = sourceFile.Read(buffer, 0, bytesToRead);
-        cs.Write(buffer, 0, bytesRead);
-        offset += bytesRead;
-    }
-}   // Dispose() automatically finalises the stream and writes the end checksum.
+using (CompressStream cs = new(compressedFile) { CompressLevel = 10 })
+    sourceFile.CopyTo(cs);
+```
+
+**Compress (async)**
+
+```csharp
+await using FileStream sourceFile     = File.OpenRead(sourceFilePath);
+await using FileStream compressedFile = File.Create(compressedFilePath);
+await using (CompressStream cs = new(compressedFile) { CompressLevel = 10 })
+    await sourceFile.CopyToAsync(cs);
 ```
 
 **Decompress**
 
 ```csharp
+// in-memory
+using MemoryStream recoveryStream = new();
+using (DecompressStream ds = new(new MemoryStream(compressed)))
+    ds.CopyTo(recoveryStream);
+byte[] decompressed = recoveryStream.ToArray();
+
+// file (works for any size)
 using FileStream compressedFile = File.OpenRead(compressedFilePath);
 using FileStream recoveryFile   = File.Create(decompressedFilePath);
 using (DecompressStream ds = new(compressedFile))
-{
     ds.CopyTo(recoveryFile);
-}
 ```
 
 ### Fine-tune compression parameters
