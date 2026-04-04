@@ -9,6 +9,8 @@
 
 Fast LZMA2 Compression algorithm Wrapper for .NET
 
+⚠️This library is not designed to generate valid 7z archives; it is solely responsible for compressing and decompressing individual byte streams.
+
 [Change Log](ChangeLog.md)
 
 With respect to [Fast LZMA2 repo](https://github.com/conor42/fast-lzma2)
