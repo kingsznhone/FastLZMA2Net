@@ -14,7 +14,7 @@ namespace FastLZMA2Net
         /// Gets the library version.
         /// </summary>
         public static readonly Version Version =
-            typeof(FL2).Assembly.GetName().Version!;
+            typeof(FL2).Assembly.GetName().Version ?? new Version(0, 0, 0);
 
         /// <summary>
         /// Gets the version as a numeric code.

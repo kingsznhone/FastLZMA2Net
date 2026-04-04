@@ -94,12 +94,6 @@ namespace FastLZMA2Net
         /// Copy decompressed data to destination stream
         /// </summary>
         /// <param name="destination"></param>
-        public new void CopyTo(Stream destination) => CopyTo(destination, 256 * 1024 * 1024);
-
-        /// <summary>
-        /// Copy decompressed data to destination stream
-        /// </summary>
-        /// <param name="destination"></param>
         /// <param name="bufferSize">Default = 256M</param>
         public override void CopyTo(Stream destination, int bufferSize = 256 * 1024 * 1024)
         {
@@ -262,13 +256,6 @@ namespace FastLZMA2Net
         /// <summary>
         /// Not support
         /// </summary>
-        /// <returns></returns>
-        /// <exception cref="NotSupportedException"></exception>
-        public override int ReadByte() => throw new NotSupportedException();
-
-        /// <summary>
-        /// Not support
-        /// </summary>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="count"></param>
@@ -297,12 +284,20 @@ namespace FastLZMA2Net
             => throw new NotSupportedException();
 
         /// <summary>
-        /// Flushes the underlying destination stream.
+        /// No-op for a read-only decompression stream.
         /// </summary>
         public override void Flush()
         {
             ObjectDisposedException.ThrowIf(disposed, this);
-            _innerStream.Flush();
+        }
+
+        /// <summary>
+        /// No-op for a read-only decompression stream.
+        /// </summary>
+        public override Task FlushAsync(CancellationToken cancellationToken)
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -331,12 +326,13 @@ namespace FastLZMA2Net
         {
             if (!disposed)
             {
+                disposed = true;
                 if (_context != IntPtr.Zero)
                     NativeMethods.FL2_freeDStream(_context);
                 await _innerStream.DisposeAsync().ConfigureAwait(false);
-                disposed = true;
             }
             GC.SuppressFinalize(this);
+            await base.DisposeAsync().ConfigureAwait(false);
         }
 
         /// <summary>

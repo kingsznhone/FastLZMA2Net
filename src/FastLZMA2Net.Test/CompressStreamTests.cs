@@ -45,10 +45,10 @@ namespace Test
 
         #endregion Write One-shot
 
-        #region Write Blocked / Append
+        #region Write Blocked
 
         [TestMethod]
-        public void WhenAppendBlockedThenDecompressRecoversData()
+        public void WhenWriteBlockedThenDecompressRecoversData()
         {
             using MemoryStream resultStream = new MemoryStream();
             using (CompressStream cs = new CompressStream(resultStream))
@@ -58,10 +58,9 @@ namespace Test
                 {
                     int remaining = _originData.Length - offset;
                     int bytesToWrite = Math.Min(1024, remaining);
-                    cs.Append(_originData, offset, bytesToWrite);
+                    cs.Write(_originData, offset, bytesToWrite);
                     offset += bytesToWrite;
                 }
-                cs.Flush();
             }
 
             byte[] compressed = resultStream.ToArray();
@@ -70,7 +69,7 @@ namespace Test
         }
 
         [TestMethod]
-        public void WhenAppendSpanThenDecompressRecoversData()
+        public void WhenWriteSpanBlockedThenDecompressRecoversData()
         {
             using MemoryStream resultStream = new MemoryStream();
             using (CompressStream cs = new CompressStream(resultStream))
@@ -80,10 +79,9 @@ namespace Test
                 {
                     int remaining = _originData.Length - offset;
                     int bytesToWrite = Math.Min(4096, remaining);
-                    cs.Append(_originData.AsSpan(offset, bytesToWrite));
+                    cs.Write(_originData.AsSpan(offset, bytesToWrite));
                     offset += bytesToWrite;
                 }
-                cs.Flush();
             }
 
             byte[] compressed = resultStream.ToArray();
@@ -91,7 +89,7 @@ namespace Test
             CollectionAssert.AreEqual(_originData, recovered);
         }
 
-        #endregion Write Blocked / Append
+        #endregion Write Blocked
 
         #region WriteAsync
 
@@ -342,24 +340,6 @@ namespace Test
             CompressStream cs = new CompressStream(ms);
             cs.Dispose();
             Assert.ThrowsExactly<ObjectDisposedException>(() => cs.Write(new byte[10]));
-        }
-
-        [TestMethod]
-        public void WhenAppendAfterDisposeThenThrowsObjectDisposedException()
-        {
-            MemoryStream ms = new MemoryStream();
-            CompressStream cs = new CompressStream(ms);
-            cs.Dispose();
-            Assert.ThrowsExactly<ObjectDisposedException>(() => cs.Append(new byte[10], 0, 10));
-        }
-
-        [TestMethod]
-        public void WhenAppendSpanAfterDisposeThenThrowsObjectDisposedException()
-        {
-            MemoryStream ms = new MemoryStream();
-            CompressStream cs = new CompressStream(ms);
-            cs.Dispose();
-            Assert.ThrowsExactly<ObjectDisposedException>(() => cs.Append(new byte[10].AsSpan()));
         }
 
         [TestMethod]

@@ -241,11 +241,12 @@ namespace Test
         }
 
         [TestMethod]
-        public void WhenReadByteThenThrowsNotSupportedException()
+        public void WhenReadByteThenReturnsDecompressedByte()
         {
             using MemoryStream ms = MakeCompressedStream();
             using DecompressStream ds = new DecompressStream(ms);
-            Assert.ThrowsExactly<NotSupportedException>(() => ds.ReadByte());
+            int b = ds.ReadByte();
+            Assert.AreNotEqual(-1, b, "ReadByte should return a valid byte from a non-empty stream.");
         }
 
         [TestMethod]

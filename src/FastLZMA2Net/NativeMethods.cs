@@ -88,7 +88,8 @@ namespace FastLZMA2Net
         private static bool IsMusl()
         {
             try { return Directory.EnumerateFiles("/lib", "ld-musl-*").Any(); }
-            catch { return false; }
+            catch (IOException) { return false; }
+            catch (UnauthorizedAccessException) { return false; }
         }
 
         private const string LibraryName = "fast-lzma2";

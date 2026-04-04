@@ -38,20 +38,15 @@ namespace FastLZMA2Net
         {
             if (!disposed)
             {
-                _accessor.SafeMemoryMappedViewHandle.ReleasePointer();
                 if (disposing)
                 {
+                    _accessor.SafeMemoryMappedViewHandle.ReleasePointer();
                     _accessor.Dispose();
                     _mmFile.Dispose();
                 }
 
                 disposed = true;
             }
-        }
-
-        ~DirectFileAccessor()
-        {
-            Dispose(disposing: false);
         }
 
         public void Dispose()

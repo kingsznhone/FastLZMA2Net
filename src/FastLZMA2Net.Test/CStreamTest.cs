@@ -26,10 +26,9 @@ namespace Test
                     {
                         int remaining = origin.Length - offset;
                         int bytesToWrite = Math.Min(1024, remaining);
-                        ds.Append(origin, offset, bytesToWrite);
+                        ds.Write(origin, offset, bytesToWrite);
                         offset += bytesToWrite;
                     }
-                    ds.Flush();
                 }
                 byte[] compressed = resultStream.ToArray();
                 byte[] recovery = FL2.Decompress(compressed);
@@ -87,10 +86,9 @@ namespace Test
                     long remaining = sourceFile.Length - offset;
                     int bytesToWrite = (int)Math.Min(1024, remaining);
                     sourceFile.Read(buffer, 0, bytesToWrite);
-                    cs.Append(buffer, 0, bytesToWrite);
+                    cs.Write(buffer, 0, bytesToWrite);
                     offset += bytesToWrite;
                 }
-                cs.Flush();
             }
 
             sourceFile.Close();

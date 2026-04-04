@@ -126,33 +126,13 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Append raw data to streaming, won't close compress stream
-        /// </summary>
-        /// <param name="buffer">Extra data</param>
-        /// <param name="offset">Start index in buffer</param>
-        /// <param name="count">How many bytes to append</param>
-        public void Append(byte[] buffer, int offset, int count)
-        {
-            ObjectDisposedException.ThrowIf(disposed, this);
-            Append(buffer.AsSpan(offset, count));
-        }
-
-        /// <summary>
-        /// Append raw data to streaming, won't close compress stream
-        /// </summary>
-        /// <param name="buffer">Extra data</param>
-        public void Append(ReadOnlySpan<byte> buffer)
-        {
-            ObjectDisposedException.ThrowIf(disposed, this);
-            CompressCore(buffer, true);
-        }
-
-        /// <summary>
-        /// Start compression and finish stream.
+        /// Compresses raw data into the underlying stream.
+        /// Call multiple times to feed data incrementally.
+        /// The stream is finalized automatically by <see cref="Flush"/> or <see cref="IDisposable.Dispose"/>.
         /// </summary>
         /// <param name="buffer">Raw data</param>
         /// <param name="offset">Start index in buffer</param>
-        /// <param name="count">How many bytes to append</param>
+        /// <param name="count">How many bytes to compress</param>
         public override void Write(byte[] buffer, int offset, int count)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
@@ -160,32 +140,38 @@ namespace FastLZMA2Net
         }
 
         /// <summary>
-        /// Start compression and finish stream.
+        /// Compresses raw data into the underlying stream.
+        /// Call multiple times to feed data incrementally.
+        /// The stream is finalized automatically by <see cref="Flush"/> or <see cref="IDisposable.Dispose"/>.
         /// </summary>
         /// <param name="buffer">Raw data</param>
         public override void Write(ReadOnlySpan<byte> buffer)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
-            CompressCore(buffer, false);
+            CompressCore(buffer);
         }
 
         /// <summary>
-        /// Start compression and finish stream asynchronously.
+        /// Asynchronously compresses raw data into the underlying stream.
+        /// Call multiple times to feed data incrementally.
+        /// The stream is finalized automatically by <see cref="FlushAsync(CancellationToken)"/> or <see cref="IAsyncDisposable.DisposeAsync"/>.
         /// </summary>
         /// <param name="buffer">Raw data</param>
         /// <param name="offset">Start index in buffer</param>
-        /// <param name="count">How many bytes to append</param>
+        /// <param name="count">How many bytes to compress</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
             Memory<byte> bufferMemory = buffer.AsMemory(offset, count);
-            await new ValueTask<int>(CompressCore(bufferMemory.Span, false, cancellationToken)).ConfigureAwait(false);
+            await new ValueTask<int>(CompressCore(bufferMemory.Span, cancellationToken)).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Start compression and finish stream asynchronously.
+        /// Asynchronously compresses raw data into the underlying stream.
+        /// Call multiple times to feed data incrementally.
+        /// The stream is finalized automatically by <see cref="FlushAsync(CancellationToken)"/> or <see cref="IAsyncDisposable.DisposeAsync"/>.
         /// </summary>
         /// <param name="buffer">Raw data</param>
         /// <param name="cancellationToken"></param>
@@ -193,10 +179,10 @@ namespace FastLZMA2Net
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
-            await new ValueTask<int>(CompressCore(buffer.Span, false, cancellationToken)).ConfigureAwait(false);
+            await new ValueTask<int>(CompressCore(buffer.Span, cancellationToken)).ConfigureAwait(false);
         }
 
-        private unsafe int CompressCore(ReadOnlySpan<byte> buffer, bool Appending, CancellationToken cancellationToken = default)
+        private unsafe int CompressCore(ReadOnlySpan<byte> buffer, CancellationToken cancellationToken = default)
         {
             EnsureInitialized();
             ref byte ref_buffer = ref MemoryMarshal.GetReference(buffer);
@@ -250,33 +236,6 @@ namespace FastLZMA2Net
                 {
                     NativeMethods.FL2_cancelCStream(_context);
                     return 0;
-                }
-
-                //Write compress checksum if not appending mode
-                if (!Appending)
-                {
-                    // Flush remaining dictionary data and write stream end marker
-                    do
-                    {
-                        outBuffer.pos = 0;
-                        code = NativeMethods.FL2_endStream(_context, ref outBuffer);
-                        if (FL2Exception.IsError(code))
-                        {
-                            if (FL2Exception.GetErrorCode(code) != FL2ErrorCode.Buffer)
-                            {
-                                throw new FL2Exception(code);
-                            }
-                        }
-                        _innerStream.Write(outputBufferArray, 0, (int)outBuffer.pos);
-                    } while (!cancellationToken.IsCancellationRequested && outBuffer.pos != 0);
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        NativeMethods.FL2_cancelCStream(_context);
-                        return 0;
-                    }
-                    //reset for next mission
-                    _ended = true;
-                    _initialized = false;
                 }
             }
             return 0;
@@ -483,13 +442,14 @@ namespace FastLZMA2Net
                 }
                 finally
                 {
+                    disposed = true;
                     if (_context != IntPtr.Zero)
                         NativeMethods.FL2_freeCStream(_context);
                     await _innerStream.DisposeAsync().ConfigureAwait(false);
-                    disposed = true;
                 }
             }
             GC.SuppressFinalize(this);
+            await base.DisposeAsync().ConfigureAwait(false);
         }
 
         /// <summary>

@@ -33,6 +33,8 @@
 		<Deterministic>true</Deterministic>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<Platforms>AnyCPU;x64;x86;ARM64;ARM32</Platforms>
+		<PlatformTarget>x64</PlatformTarget>
 	</PropertyGroup>
 
 	<ItemGroup>

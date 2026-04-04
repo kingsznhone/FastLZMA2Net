@@ -168,7 +168,8 @@ namespace FastLZMA2Net
             byte[] buffer = ArrayPool<byte>.Shared.Rent(checked((int)bound));
             try
             {
-                nuint code = NativeMethods.FL2_compressCCtx(_context, buffer, bound, src, (nuint)src.Length, compressLevel);
+                nuint code = NativeMethods.FL2_compressCCtx(_context, buffer, bound, src, (nuint)src.Length,
+                    compressLevel == 0 ? CompressLevel : compressLevel);
                 if (FL2Exception.IsError(code))
                 {
                     throw new FL2Exception(code);
@@ -233,7 +234,7 @@ namespace FastLZMA2Net
                 {
                     throw new FL2Exception(code);
                 }
-                using (DirectFileAccessor accessorDst = new(destFile.FullName, FileMode.OpenOrCreate, null, sourceFile.Length, MemoryMappedFileAccess.ReadWrite))
+                using (DirectFileAccessor accessorDst = new(destFile.FullName, FileMode.OpenOrCreate, null, (long)code, MemoryMappedFileAccess.ReadWrite))
                 {
                     code = NativeMethods.FL2_compressCCtx(_context, accessorDst.AsSpan(), code, accessorSrc.AsReadOnlySpan(), (nuint)sourceFile.Length, CompressLevel);
                     if (FL2Exception.IsError(code))

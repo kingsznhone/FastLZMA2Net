@@ -6,11 +6,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTargets>x64;x86;AnyCPU</PlatformTargets>
+    <Platforms>AnyCPU;x64;x86;ARM64;ARM32</Platforms>
 	 
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\FastLZMA2Net\FastLZMA2Net.csproj" />
   </ItemGroup>
+
+
 
 </Project>

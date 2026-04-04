@@ -8,9 +8,9 @@ namespace Demo
         private static async Task Main(string[] args)
         {
             Console.WriteLine("FL2 Version: " + FL2.VersionString);
-            string SourceFilePath = @"D:\dummy.tar";
-            string CompressedFilePath = @"D:\dummy.tar.fl2";
-            string DecompressedFilePath = @"D:\dummy.recovery.tar";
+            string SourceFilePath = @"dummy.tar";
+            string CompressedFilePath = @"dummy.tar.fl2";
+            string DecompressedFilePath = @"dummy.recovery.tar";
 
             // Simple compression
             byte[] origin = File.ReadAllBytes(SourceFilePath);
@@ -38,10 +38,6 @@ namespace Demo
                 compressed = ms.ToArray();
             }
 
-            // Streaming Compression
-            // use 256MB input buffer
-            byte[] buffer = new byte[256 * 1024 * 1024];
-
             //large file streaming compression using Direct file access(>2GB)
             long sourceFileSize = new FileInfo(SourceFilePath).Length;
             Stopwatch swCompress = Stopwatch.StartNew();
@@ -53,18 +49,7 @@ namespace Demo
                     cs.HighCompressLevel = 10;
                     using (FileStream sourceFile = File.OpenRead(SourceFilePath))
                     {
-                        //DO NOT USE sourceFile.CopyTo(cs)
-                        // CopyTo calls write() internal, which terminate stream after 1 cycle.
-                        long offset = 0;
-                        while (offset < sourceFile.Length)
-                        {
-                            long remaining = sourceFile.Length - offset;
-                            int bytesToWrite = (int)Math.Min(64 * 1024 * 1024, remaining);
-                            sourceFile.Read(buffer, 0, bytesToWrite);
-                            cs.Append(buffer, 0, bytesToWrite);
-                            offset += bytesToWrite;
-                        }
-                        // Flush() is called automatically by Dispose()
+                        sourceFile.CopyTo(cs);
                     }
                 }
             }
